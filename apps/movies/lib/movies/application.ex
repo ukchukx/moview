@@ -12,6 +12,7 @@ defmodule Moview.Movies.Application do
     children = [
       # Starts a worker by calling: Moview.Movies.Worker.start_link(arg1, arg2, arg3)
       # worker(Moview.Movies.Worker, [arg1, arg2, arg3]),
+      supervisor(Moview.Movies.Repo, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
