@@ -11,6 +11,7 @@ defmodule Moview.Movies.Mixfile do
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     aliases: aliases(),
      deps: deps()]
   end
 
@@ -39,5 +40,13 @@ defmodule Moview.Movies.Mixfile do
   defp deps do
     [{:postgrex, ">= 0.0.0"},
      {:ecto, "~> 2.1"}]
+  end
+
+  defp aliases do
+    [
+      "ecto.setup": ["ecto.create", "ecto.migrate"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "test": ["ecto.create --quiet", "ecto.migrate", "test"]
+    ]
   end
 end
