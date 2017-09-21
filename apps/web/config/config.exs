@@ -12,7 +12,7 @@ config :web,
 # Configures the endpoint
 config :web, Moview.Web.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "dt7gKRbpoa1kd0FufXK9S9953BJJi+lI8U/O8fb+uODB/L4AzwPCfGJ5C2Kbaa6U",
+  secret_key_base: "5sGUx8LMnJyCv6ntcT9B0Cp5Kol0mmdiGaQVw3wjYaSsRa1oVinmWmS47kT69KWJ",
   render_errors: [view: Moview.Web.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Moview.Web.PubSub,
            adapter: Phoenix.PubSub.PG2]
