@@ -1,23 +1,29 @@
 defmodule Moview.Movies.Application do
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+  require Logger
 
-  use Application
+  alias Moview.Movies.Movie.Server, as: MovieServer
+  alias Moview.Movies.Cinema.Server, as: CinemaServer
+  alias Moview.Movies.Schedule.Server, as: ScheduleServer
 
-  def start(_type, _args) do
+  def start(type, _args) do
     import Supervisor.Spec, warn: false
 
-    # Define workers and child supervisors to be supervised
     children = [
-      # Starts a worker by calling: Moview.Movies.Worker.start_link(arg1, arg2, arg3)
-      # worker(Moview.Movies.Worker, [arg1, arg2, arg3]),
-      supervisor(Moview.Movies.Repo, [])
+      supervisor(Moview.Movies.Repo, []),
+      worker(MovieServer, []),
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Moview.Movies.Supervisor]
+    case type do
+      :normal ->
+        Logger.info("Application is started on #{node()}")
+      {:takeover, old_node} ->
+        Logger.info("#{node()} is taking over #{old_node}")
+      {:failover, old_node} ->
+        Logger.info("#{old_node} is failing over to #{node()}")
+    end
+
+    opts = [strategy: :one_for_one, name: {:global, Moview.Movies.Supervisor}]
+
     Supervisor.start_link(children, opts)
   end
 end

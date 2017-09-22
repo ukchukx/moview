@@ -49,24 +49,24 @@ defmodule Moview.Movies.Rating.Schema.Data do
   def changeset(params) do
     %__MODULE__{}
     |> changeset(params)
-    |> capitalize_name
+    |> upcase_name
   end
 
   def changeset(%__MODULE__{} = struct, params) do
     struct
     |> cast(params, [:name, :delisted])
     |> validate_required([:name])
-    |> capitalize_name
+    |> upcase_name
   end
 
-  defp capitalize_name(%Ecto.Changeset{valid?: true} = changeset) do
+  defp upcase_name(%Ecto.Changeset{valid?: true} = changeset) do
     case changeset do
       %{changes: %{name: name}} ->
-        put_change(changeset, :name, String.capitalize(name))
+        put_change(changeset, :name, String.upcase(name))
       _ ->
         changeset
     end
   end
-  defp capitalize_name(%Ecto.Changeset{} = changeset), do: changeset
+  defp upcase_name(%Ecto.Changeset{} = changeset), do: changeset
 end
 

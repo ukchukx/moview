@@ -6,5 +6,5 @@ config :movies, Moview.Movies.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  pool_size: Ecto.Adapters.SQL.Sandbox
+  pool: Ecto.Adapters.SQL.Sandbox
 

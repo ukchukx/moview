@@ -12,6 +12,7 @@ defmodule Moview.Movies.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      aliases: aliases(),
+     elixirc_paths: elixirc_paths(Mix.env),
      deps: deps()]
   end
 
@@ -40,8 +41,12 @@ defmodule Moview.Movies.Mixfile do
   defp deps do
     [{:postgrex, ">= 0.0.0"},
      {:ecto, "~> 2.1"},
+     {:poison, "~> 3.1"},
      {:ruid, "~> 0.1.0"}]
   end
+
+  # def elixirc_paths(:test), do: ["lib", "test/support"]
+  def elixirc_paths(_), do: ["lib"]
 
   defp aliases do
     [

@@ -16,4 +16,4 @@
   "poolboy": {:hex, :poolboy, "1.5.1", "6b46163901cfd0a1b43d692657ed9d7e599853b3b21b95ae5ae0a777cf9b6ca8", [:rebar], []},
   "postgrex": {:hex, :postgrex, "0.13.3", "c277cfb2a9c5034d445a722494c13359e361d344ef6f25d604c2353185682bfc", [:mix], [{:connection, "~> 1.0", [hex: :connection, optional: false]}, {:db_connection, "~> 1.1", [hex: :db_connection, optional: false]}, {:decimal, "~> 1.0", [hex: :decimal, optional: false]}]},
   "ranch": {:hex, :ranch, "1.3.2", "e4965a144dc9fbe70e5c077c65e73c57165416a901bd02ea899cfd95aa890986", [:rebar3], []},
-  "ruid": {:hex, :ruid, "0.1.0", "9f88ce82d22d63903c2b8c2c72c712715a8ef5b281c88ac64ab6929543e0c433", [:mix], []}}
+  "ruid": {:hex, :ruid, "0.1.0", "b3c77eabb2a61e7bb13c38ae3ce3370fcc3bbc42cc92780e938c330560681b9d", [:mix], []}}
