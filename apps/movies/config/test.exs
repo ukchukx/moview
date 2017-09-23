@@ -6,8 +6,8 @@ config :movies, Moview.Movies.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  timeout: 60_000,
-  pool_timeout: 60_000,
-  ownership_timeout: 60_000,
+  timeout: 15_000,
+  pool_timeout: 15_000,
+  ownership_timeout: 15_000,
   pool: Ecto.Adapters.SQL.Sandbox
 
