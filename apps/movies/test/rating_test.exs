@@ -5,11 +5,7 @@ defmodule Moview.RatingTest do
 
 
   setup %{} do
-    # Clear ratings the hard way
-    API.get_ratings
-    |> elem(1)
-    |> Enum.each(&(API.delete_rating(&1.id)))
-
+    API.clear_state()
     {:ok, rating} = API.create_rating(%{name: "r"})
 
     {:ok, rating_params: %{name: "pg-13"}, rating: rating}

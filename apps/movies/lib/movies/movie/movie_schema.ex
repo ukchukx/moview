@@ -14,7 +14,7 @@ defmodule Moview.Movies.Movie.Schema do
     embeds_one :data, __MODULE__.Data
     belongs_to :rating, RatingSchema
     has_many :schedules, ScheduleSchema, foreign_key: :movie_id
-    many_to_many :genres, GenreSchema, join_through: "movies_genres"
+    many_to_many :genres, GenreSchema, join_through: "movies_genres", join_keys: [movie_id: :id, genre_id: :id]
     timestamps()
   end
 
@@ -79,11 +79,11 @@ defmodule Moview.Movies.Movie.Schema.Data do
   use Moview.Movies.BaseSchema, :model
 
   embedded_schema do
-    field :title, :string
-    field :slug, :string
+    field :title, :string, default: ""
+    field :slug, :string, default: ""
     field :trailer, :string, default: ""
-    field :synopsis, :string
-    field :runtime, :integer
+    field :synopsis, :string, default: ""
+    field :runtime, :integer, default: 0
     field :stars, {:array, :string}
     field :poster, :string, default: ""
     field :delisted, :boolean, default: false
@@ -97,7 +97,7 @@ defmodule Moview.Movies.Movie.Schema.Data do
   def changeset(%__MODULE__{} = struct, params) do
     struct
     |> cast(params, [:title, :slug, :trailer, :synopsis, :runtime, :stars, :poster, :delisted])
-    |> validate_required([:title, :synopsis, :runtime, :stars])
+    |> validate_required([:title, :runtime, :stars])
   end
 
 end

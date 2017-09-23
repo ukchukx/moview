@@ -28,6 +28,8 @@ defmodule Moview.Movies.Movie do
   end
 
 
+  def get_state, do: GenServer.call(@service_name, :which_state)
+
   def create_movie(%{rating: rating_name, genres: genres} = params) do
     # Get the id of the rating with the supplied name
     rating_id =
@@ -40,14 +42,14 @@ defmodule Moview.Movies.Movie do
       end
 
     # Look for uncreated genres & create them
-    genre_list = get_genres()
+    {:ok, genre_list} = get_genres()
     genre_name_list = Enum.map(genre_list, &(String.downcase(&1.data.name)))
     genre_list =
       genres
       # Split the supplied genres into ones that have been created & ones that have not
       |> Enum.split_with(fn g -> String.downcase(g) in genre_name_list end)
       # Get the ones that have not been created
-      |> Enum.at(1)
+      |> elem(1)
       # Create them
       |> Enum.map(fn g ->
         {:ok, genre} = create_genre(%{name: g})
@@ -69,7 +71,7 @@ defmodule Moview.Movies.Movie do
             # Associate genres
             genres = Enum.map(genres, &String.downcase/1)
             movie_genres = Enum.filter(genre_list, fn genre -> String.downcase(genre.data.name) in genres end)
-            Movie.associate_genres(movie, movie_genres)
+            {:ok, Movie.associate_genres(movie, movie_genres)}
           {:error, changeset} ->
             {:error, changeset}
         end
@@ -145,7 +147,7 @@ defmodule Moview.Movies.Movie do
         case changeset do
           %Ecto.Changeset{valid?: true} ->
             case get_rating_by_name(new_name) do
-              {:ok, rating} ->
+              {:ok, _} ->
                 {:error, :name_exists}
               {:error, :not_found} ->
                 GenServer.call(@service_name, {:update_rating, changeset})
@@ -160,7 +162,7 @@ defmodule Moview.Movies.Movie do
 
 
   def delete_movie(id) do
-    GenServer.call(@service_name, {:delete_movie, [id: id]})
+    GenServer.call(@service_name, {:delete_movie, [id: id]}, 60000)
   end
 
   def delete_genre(id) do
@@ -169,6 +171,19 @@ defmodule Moview.Movies.Movie do
 
   def delete_rating(id) do
     GenServer.call(@service_name, {:delete_rating, [id: id]})
+  end
+
+
+  def delete_movies do
+    GenServer.cast(@service_name, {:delete_movies})
+  end
+
+  def delete_genres do
+    GenServer.cast(@service_name, {:delete_genres})
+  end
+
+  def delete_ratings do
+    GenServer.cast(@service_name, {:delete_ratings})
   end
 
 
@@ -208,6 +223,13 @@ defmodule Moview.Movies.Movie do
 
   def get_ratings do
     GenServer.call(@service_name, {:get_ratings})
+  end
+
+
+  def clear_state do
+    delete_movies()
+    delete_ratings()
+    delete_genres()
   end
 
 end

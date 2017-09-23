@@ -5,10 +5,7 @@ defmodule Moview.GenreTest do
 
 
   setup %{} do
-    # Clear genres the hard way
-    API.get_genres
-    |> elem(1)
-    |> Enum.each(&(API.delete_genre(&1.id)))
+    API.clear_state()
 
     {:ok, genre} = API.create_genre(%{name: "action"})
 
