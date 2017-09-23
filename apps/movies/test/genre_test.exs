@@ -25,7 +25,6 @@ defmodule Moview.GenreTest do
     assert gid == id
   end
 
-  @tag :assoc
   test "update genre", %{genre: %{id: id}} do
     {:ok, %{id: gid, data: %{name: name}}} = API.update_genre(id, %{name: "t"})
     assert name == "T"

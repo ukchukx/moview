@@ -25,7 +25,6 @@ defmodule Moview.RatingTest do
     assert rid == id
   end
 
-  @tag :assoc
   test "update rating", %{rating: %{id: id}} do
     {:ok, %{id: rid, data: %{name: name}}} = API.update_rating(id, %{name: "t"})
     assert name == "T"

@@ -96,7 +96,7 @@ defmodule Moview.Movies.Movie.Impl do
       {:ok, movie} ->
         case Movie.changeset(movie, params) do
           %Ecto.Changeset{valid?: true} = changeset ->
-            case Repo.insert!(changeset) do
+            case Repo.update!(changeset) do
               {:error, changeset} ->
                 {:error, changeset}
               movie ->
@@ -182,7 +182,7 @@ defmodule Moview.Movies.Movie.Impl do
               {:ok, _} ->
                 {:error, :name_exists}
               {:error, :not_found} ->
-                case Repo.insert!(changeset) do
+                case Repo.update!(changeset) do
                   {:error, changeset} ->
                     {:error, changeset}
                   rating ->
@@ -274,7 +274,7 @@ defmodule Moview.Movies.Movie.Impl do
               {:ok, _} ->
                 {:error, :name_exists}
               {:error, :not_found} ->
-                case Repo.insert!(changeset) do
+                case Repo.update!(changeset) do
                   {:error, changeset} ->
                     {:error, changeset}
                   genre ->
