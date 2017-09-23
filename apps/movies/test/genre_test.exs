@@ -1,12 +1,12 @@
 defmodule Moview.GenreTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias Moview.Movies.Movie, as: API
 
 
   setup %{} do
     API.clear_state()
-
+    API.Impl.init(true)
     {:ok, genre} = API.create_genre(%{name: "action"})
 
     {:ok, genre_params: %{name: "thriller"}, genre: genre}
@@ -15,7 +15,7 @@ defmodule Moview.GenreTest do
   test "create genre", %{genre_params: params} do
     {:ok, %{data: %{name: name}, id: id}} = API.create_genre(params)
     assert name == "Thriller"
-    assert id
+    assert is_integer(id)
   end
 
   test "create genre when genre exists", %{genre: %{data: data, id: id}} do
@@ -24,6 +24,7 @@ defmodule Moview.GenreTest do
     assert gid == id
   end
 
+  @tag :assoc
   test "update genre", %{genre: %{id: id}} do
     {:ok, %{id: gid, data: %{name: name}}} = API.update_genre(id, %{name: "t"})
     assert name == "T"
@@ -47,12 +48,11 @@ defmodule Moview.GenreTest do
   test "find genre by name", %{genre_params: %{name: pname}, genre: %{data: %{name: gname}, id: id}} do
     {:ok, %{id: gid}} = API.get_genre_by_name(gname)
     assert id == gid
-    {:error, err} = API.get_genre_by_name(pname)
-    assert err == :not_found
+    assert {:error, :not_found} == API.get_genre_by_name(pname)
   end
 
-  test "delete genre", %{genre: %{id: id}} do
-    {:ok, %{id: gid}} = API.delete_genre(id)
+  test "delete genre", %{genre: %{id: id} = genre} do
+    {:ok, %{id: gid}} = API.delete_genre(genre)
     assert gid == id
     assert {:error, :not_found} == API.get_genre(id)
   end

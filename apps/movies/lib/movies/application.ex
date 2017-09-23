@@ -1,16 +1,11 @@
 defmodule Moview.Movies.Application do
   require Logger
 
-  alias Moview.Movies.Movie.Server, as: MovieServer
-  alias Moview.Movies.Cinema.Server, as: CinemaServer
-  alias Moview.Movies.Schedule.Server, as: ScheduleServer
-
   def start(type, _args) do
     import Supervisor.Spec, warn: false
 
     children = [
-      supervisor(Moview.Movies.Repo, []),
-      worker(MovieServer, []),
+      supervisor(Moview.Movies.Repo, [])
     ]
 
     case type do
