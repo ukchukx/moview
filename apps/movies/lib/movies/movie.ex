@@ -162,7 +162,7 @@ defmodule Moview.Movies.Movie do
 
 
   def delete_movie(id) do
-    GenServer.call(@service_name, {:delete_movie, [id: id]}, 60000)
+    GenServer.call(@service_name, {:delete_movie, [id: id]})
   end
 
   def delete_genre(id) do
