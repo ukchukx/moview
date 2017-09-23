@@ -5,7 +5,8 @@ defmodule Moview.MovieTest do
 
 
   setup %{} do
-    API.clear_state()
+    on_exit fn -> API.clear_state() end
+
     API.Impl.init(true)
     {:ok, genre1} = API.create_genre(%{name: "Action"})
     {:ok, genre2} = API.create_genre(%{name: "Thriller"})
@@ -62,7 +63,6 @@ defmodule Moview.MovieTest do
     assert {:error, :not_found} == API.get_movie_by_slug("a-random-slug")
   end
 
-  @tag :fail
   test "delete movie", %{movie: %{id: id} = movie} do
     {:ok, %{id: mid}} = API.delete_movie(movie)
     assert mid == id

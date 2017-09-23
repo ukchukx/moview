@@ -5,7 +5,8 @@ defmodule Moview.GenreTest do
 
 
   setup %{} do
-    API.clear_state()
+    on_exit fn -> API.clear_state() end
+
     API.Impl.init(true)
     {:ok, genre} = API.create_genre(%{name: "action"})
 
