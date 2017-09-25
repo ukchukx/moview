@@ -1,31 +1,34 @@
 defmodule Moview.Movies.Cinema do
-  alias Moview.Movies.Cinema.Schema, as: Cinema
+  @moduledoc """
+  All cinema functions return {:ok, result} when successful else {:error, reason/changeset}
+  """
+  alias Moview.Movies.Cinema.Impl
 
-  @service_name {:global, :cinema_service}
+  @service_name Application.get_env(:movies, :services)[:cinema]
 
 
-  def get_cinemas_by_name(name) do
-    GenServer.call(@service_name, {:get_cinemas, [name: name]})
-  end
-
-  def create_cinema(%{} = params) do
-    :ok
+  def create_cinema(%{name: _, address: _, city: _} = params) do
+    Impl.create_cinema(params)
   end
 
   def update_cinema(id, %{} = params) do
-    :ok
+    Impl.update_cinema(id, params)
   end
 
   def delete_cinema(id) do
-    GenServer.call(@service_name, {:delete_cinema, [id: id]})
+    Impl.delete_cinema(id)
   end
 
   def get_cinema(id) do
-    GenServer.call(@service_name, {:get_cinema, [id: id]})
+    Impl.get_cinema(id)
+  end
+
+  def get_cinemas_by_name(name) do
+    Impl.get_cinemas_by_name(name)
   end
 
   def get_cinemas do
-    GenServer.call(@service_name, {:get_cinemas})
+    Impl.get_cinemas()
   end
 end
 
