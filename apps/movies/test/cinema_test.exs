@@ -5,9 +5,9 @@ defmodule Moview.CinemaTest do
 
 
   setup %{} do
-    on_exit fn -> API.Impl.clear_state() end
+    on_exit fn -> API.clear_state() end
 
-    API.Impl.init(true)
+    API.init(true)
     {:ok, cinema} = API.create_cinema(%{name: "Movie cinemas", address: "#1 Theatre road", city: "Metro"})
 
     {:ok, cinema_params: %{name: "Blockbuster", address: "#2 Trailer park", city: "Polis"}, cinema: cinema}
@@ -55,10 +55,14 @@ defmodule Moview.CinemaTest do
     assert rid == id
   end
 
-  test "find cinemas by name", %{cinema_params: %{name: pname}, cinema: %{data: %{name: rname}, id: id}} do
+  test "find cinemas by name", %{cinema_params: %{name: pname} = params, cinema: %{data: %{name: rname}, id: id}} do
     {:ok, [%{id: rid}]} = API.get_cinemas_by_name(rname)
     assert id == rid
     assert {:ok, []} == API.get_cinemas_by_name(pname)
+
+    API.create_cinema(Map.put(params, :name, rname))
+    {:ok, cinemas} = API.get_cinemas_by_name(rname)
+    assert 2 == Enum.count(cinemas)
   end
 
   test "delete cinema", %{cinema: %{id: id} = cinema} do
@@ -67,5 +71,4 @@ defmodule Moview.CinemaTest do
     assert {:error, :not_found} == API.get_cinema(id)
   end
 end
-
 

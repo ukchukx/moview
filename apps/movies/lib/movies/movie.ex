@@ -129,6 +129,6 @@ defmodule Moview.Movies.Movie do
 
   def clear_state, do: Impl.clear_state()
 
-  def init, do: Impl.init()
+  def init(arg), do: Impl.init(arg)
 
 end

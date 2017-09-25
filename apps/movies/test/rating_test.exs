@@ -7,7 +7,7 @@ defmodule Moview.RatingTest do
   setup %{} do
     on_exit fn -> API.clear_state() end
 
-    API.Impl.init(true)
+    API.init(true)
     {:ok, rating} = API.create_rating(%{name: "r"})
 
     {:ok, rating_params: %{name: "pg-13"}, rating: rating}

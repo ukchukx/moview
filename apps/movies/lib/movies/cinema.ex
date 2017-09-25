@@ -6,6 +6,9 @@ defmodule Moview.Movies.Cinema do
 
   @service_name Application.get_env(:movies, :services)[:cinema]
 
+  def init(arg), do: Impl.init(arg)
+
+  def clear_state, do: Impl.clear_state()
 
   def create_cinema(%{name: _, address: _, city: _} = params) do
     Impl.create_cinema(params)
@@ -15,8 +18,8 @@ defmodule Moview.Movies.Cinema do
     Impl.update_cinema(id, params)
   end
 
-  def delete_cinema(id) do
-    Impl.delete_cinema(id)
+  def delete_cinema(cinema) do
+    Impl.delete_cinema(cinema)
   end
 
   def get_cinema(id) do
