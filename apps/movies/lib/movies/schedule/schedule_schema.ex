@@ -46,22 +46,24 @@ defmodule Moview.Movies.Schedule.Schema.Data do
   use Moview.Movies.BaseSchema, :model
 
   embedded_schema do
-    field :day, :string
-    field :time, :string
-    field :schedule_type, :string, default: ""
+    field :day, :string, default: ""
+    field :time, :string, default: ""
+    field :schedule_type, :string, default: "2D"
   end
 
   def changeset(params) do
     %__MODULE__{}
     |> changeset(params)
     |> capitalize_day
+    |> upcase_schedule_type
   end
 
   def changeset(%__MODULE__{} = struct, params) do
     struct
     |> cast(params, [:day, :time, :schedule_type])
-    |> validate_required([:day, :time])
+    |> validate_required([:day, :time, :schedule_type])
     |> capitalize_day
+    |> upcase_schedule_type
   end
 
   defp capitalize_day(%Ecto.Changeset{valid?: false} = changeset), do: changeset
@@ -69,6 +71,16 @@ defmodule Moview.Movies.Schedule.Schema.Data do
     case changeset do
       %{changes: %{day: day}} ->
         put_change(changeset, :day, String.capitalize(day))
+      _ ->
+        changeset
+    end
+  end
+
+  defp upcase_schedule_type(%Ecto.Changeset{valid?: false} = changeset), do: changeset
+  defp upcase_schedule_type(%Ecto.Changeset{valid?: true} = changeset) do
+    case changeset do
+      %{changes: %{schedule_type: schedule_type}} ->
+        put_change(changeset, :schedule_type, String.upcase(schedule_type))
       _ ->
         changeset
     end

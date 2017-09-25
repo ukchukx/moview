@@ -1,34 +1,45 @@
 defmodule Moview.Movies.Schedule do
-  alias Moview.Movies.Schedule.Schema, as: Schedule
+  @moduledoc """
+  All cinema functions return {:ok, result} when successful else {:error, reason/changeset}
+  """
+  alias Moview.Movies.Schedule.Impl
 
-  @service_name {:global, :schedule_service}
+  def clear_state, do: Impl.clear_state()
 
-  def get_schedules_by_cinema(id) do
-    GenServer.call(@service_name, {:get_schedule, [cinema_id: id]})
-  end
-
-  def create_schedule(%{} = params) do
-    :ok
+  def create_schedule(%{day: _, time: _, schedule_type: _, movie_id: _, cinema_id: _} = params) do
+    Impl.create_schedule(params)
   end
 
   def update_schedule(id, %{} = params) do
-    :ok
+    Impl.update_schedule(id, params)
   end
 
-  def delete_schedule(id) do
-    GenServer.call(@service_name, {:delete_schedule, [id: id]})
+  def delete_schedule(schedule) do
+    Impl.delete_schedule(schedule)
   end
 
   def get_schedule(id) do
-    GenServer.call(@service_name, {:get_schedule, [id: id]})
+    Impl.get_schedule(id)
   end
 
-  def get_schedules_by_movie_id(id) do
-    GenServer.call(@service_name, {:get_schedule, [movie_id: id]})
+  def get_schedules_by_cinema(id) do
+    Impl.get_schedules_by_cinema(id)
+  end
+
+  def get_schedules_by_movie(id) do
+    Impl.get_schedules_by_movie(id)
+  end
+
+  def get_schedules_by_day_and_movie_id(day, movie_id) do
+    Impl.get_schedules_by_day_and_movie_id(day, movie_id)
+  end
+
+  def get_schedules_by_day_and_cinema_id(day, cinema_id) do
+    Impl.get_schedules_by_day_and_cinema_id(day, cinema_id)
   end
 
   def get_schedules do
-    GenServer.call(@service_name, {:get_schedules})
+    Impl.get_schedules()
   end
 end
 
