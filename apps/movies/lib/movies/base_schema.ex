@@ -14,6 +14,10 @@ defmodule Moview.Movies.BaseSchema do
   end
   def new_id(%Ecto.Changeset{} = changeset), do: changeset
 
+  def to_map(list) when is_list(list) do
+    list
+    |> Enum.reduce(%{}, fn resource = %{id: id}, acc -> Map.put(acc, id, resource) end)
+  end
 
   defmacro __using__(which) when is_atom(which), do: apply(__MODULE__, which, [])
 end
