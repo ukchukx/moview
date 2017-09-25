@@ -1,5 +1,6 @@
 defmodule Moview.Movies.Movie.Impl do
   import Ecto.Query
+  import Moview.Movies.BaseSchema, only: [to_map: 1]
 
   alias Moview.Movies.Movie.Schema, as: Movie
   alias Moview.Movies.Genre.Schema, as: Genre
@@ -33,11 +34,6 @@ defmodule Moview.Movies.Movie.Impl do
     genres = Repo.all(Genre) |> to_map
     ratings = Repo.all(Rating) |> to_map
     %{movies: movies, genres: genres, ratings: ratings}
-  end
-
-  defp to_map(list) when is_list(list) do
-    list
-    |> Enum.reduce(%{}, fn resource = %{id: id}, acc -> Map.put(acc, id, resource) end)
   end
 
   def create_movie(%{rating: rating_name, genres: genres} = params) do
@@ -140,6 +136,17 @@ defmodule Moview.Movies.Movie.Impl do
 
   def get_movies do
     GenServer.call(@service_name, {:get_movies})
+    case GenServer.call(@service_name, {:get_movies}) do
+      {:ok, []} ->
+        case Repo.all(Movie) do
+          [] ->
+            {:ok, []}
+          movies ->
+            Enum.each(movies, fn movie -> GenServer.cast(@service_name, {:save_movie, movie}) end)
+            {:ok, movies}
+        end
+      {:ok, _movies} = res -> res
+    end
   end
 
   def delete_movies do
@@ -200,7 +207,14 @@ defmodule Moview.Movies.Movie.Impl do
 
   def get_ratings do
     case GenServer.call(@service_name, {:get_ratings}) do
-      {:error, :not_found} -> {:ok, Repo.all(Rating)}
+      {:ok, []} ->
+        case Repo.all(Rating) do
+          [] ->
+            {:ok, []}
+          ratings ->
+            Enum.each(ratings, fn rating -> GenServer.cast(@service_name, {:save_rating, rating}) end)
+            {:ok, ratings}
+        end
       {:ok, _ratings} = res -> res
     end
   end
@@ -321,7 +335,14 @@ defmodule Moview.Movies.Movie.Impl do
 
   def get_genres do
     case GenServer.call(@service_name, {:get_genres}) do
-      {:error, :not_found} -> {:ok, Repo.all(Genre)}
+      {:ok, []} ->
+        case Repo.all(Genre) do
+          [] ->
+            {:ok, []}
+          genres ->
+            Enum.each(genres, fn genre -> GenServer.cast(@service_name, {:save_genre, genre}) end)
+            {:ok, genres}
+        end
       {:ok, _genres} = res -> res
     end
   end
