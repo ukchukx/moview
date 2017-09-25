@@ -7,7 +7,6 @@ defmodule Moview.MovieTest do
   setup %{} do
     on_exit fn -> API.clear_state() end
 
-    API.init(true)
     {:ok, genre1} = API.create_genre(%{name: "Action"})
     {:ok, genre2} = API.create_genre(%{name: "Thriller"})
     {:ok, %{data: %{name: rating1}}} = API.create_rating(%{name: "PG"})

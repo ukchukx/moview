@@ -15,27 +15,6 @@ defmodule Moview.Movies.Movie.Impl do
     delete_genres()
   end
 
-  def get_state do
-    GenServer.call(@service_name, :which_state)
-  end
-
-  def init(link? \\ false) do
-    state = init_state()
-    case link? do
-      true ->
-        __MODULE__.Server.start_link(state)
-      false ->
-        __MODULE__.Server.start(state)
-    end
-  end
-
-  defp init_state do
-    movies = Repo.all(Movie) |> to_map
-    genres = Repo.all(Genre) |> to_map
-    ratings = Repo.all(Rating) |> to_map
-    %{movies: movies, genres: genres, ratings: ratings}
-  end
-
   def create_movie(%{rating: rating_name, genres: genres} = params) do
     # Get the id of the rating with the supplied name
     rating_id =
@@ -357,17 +336,16 @@ defmodule Moview.Movies.Movie.Impl do
     Repo.delete_all(Genre)
   end
 
-  defmodule Server do
+  defmodule Cache do
     use GenServer
 
     @service_name Application.get_env(:movies, :services)[:movie]
 
-    def start(state \\ %{}) do
-      GenServer.start(__MODULE__, state, name: @service_name)
-    end
-
-    def start_link(state \\ %{}) do
-      GenServer.start_link(__MODULE__, state, name: @service_name)
+    def start_link do
+      movies = Repo.all(Movie) |> to_map
+      genres = Repo.all(Genre) |> to_map
+      ratings = Repo.all(Rating) |> to_map
+      GenServer.start_link(__MODULE__, %{movies: movies, genres: genres, ratings: ratings}, name: @service_name)
     end
 
 

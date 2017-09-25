@@ -125,10 +125,5 @@ defmodule Moview.Movies.Movie do
   # General API operations
   #
 
-  def get_state, do: Impl.get_state()
-
   def clear_state, do: Impl.clear_state()
-
-  def init(arg), do: Impl.init(arg)
-
 end

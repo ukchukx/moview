@@ -4,10 +4,6 @@ defmodule Moview.Movies.Cinema do
   """
   alias Moview.Movies.Cinema.Impl
 
-  @service_name Application.get_env(:movies, :services)[:cinema]
-
-  def init(arg), do: Impl.init(arg)
-
   def clear_state, do: Impl.clear_state()
 
   def create_cinema(%{name: _, address: _, city: _} = params) do

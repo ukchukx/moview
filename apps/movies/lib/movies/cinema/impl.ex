@@ -10,39 +10,6 @@ defmodule Moview.Movies.Cinema.Impl do
     delete_cinemas()
   end
 
-  def get_state do
-    GenServer.call(@service_name, :which_state)
-  end
-
-  def init(link? \\ false) do
-    state = init_state()
-    case link? do
-      true ->
-        __MODULE__.Server.start_link(state)
-      false ->
-        __MODULE__.Server.start(state)
-    end
-  end
-
-  defp init_state do
-    cinemas = Repo.all(Cinema) |> to_map
-    %{cinemas: cinemas}
-  end
-
-  def get_cinemas do
-    case GenServer.call(@service_name, {:get_cinemas}) do
-      {:error, :not_found} ->
-        case Repo.all(Cinema) do
-          [] ->
-            {:ok, []}
-          cinemas ->
-            Enum.each(cinemas, fn cinema -> GenServer.cast(@service_name, {:save_cinema, cinema}) end)
-            {:ok, cinemas}
-        end
-      {:ok, _cinemas} = res -> res
-    end
-  end
-
   def create_cinema(%{name: name, address: addr, city: city} = params) do
     movie_filter_fun = fn
       %{data: %{name: ^name, address: ^addr, city: ^city}} -> true
@@ -153,18 +120,14 @@ defmodule Moview.Movies.Cinema.Impl do
   end
 
 
-  defmodule Server do
+  defmodule Cache do
     use GenServer
 
     @service_name Application.get_env(:movies, :services)[:cinema]
 
-
-    def start(state \\ %{}) do
-      GenServer.start(__MODULE__, state, name: @service_name)
-    end
-
-    def start_link(state \\ %{}) do
-      GenServer.start_link(__MODULE__, state, name: @service_name)
+    def start_link do
+      cinemas = Repo.all(Cinema) |> to_map
+      GenServer.start_link(__MODULE__, %{cinemas: cinemas}, name: @service_name)
     end
 
     def init(state) do
@@ -206,6 +169,5 @@ defmodule Moview.Movies.Cinema.Impl do
     def handle_cast({:delete_cinemas}, _state) do
       {:noreply, %{cinemas: %{}}}
     end
-
   end
 end

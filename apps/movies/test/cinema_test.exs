@@ -7,7 +7,6 @@ defmodule Moview.CinemaTest do
   setup %{} do
     on_exit fn -> API.clear_state() end
 
-    API.init(true)
     {:ok, cinema} = API.create_cinema(%{name: "Movie cinemas", address: "#1 Theatre road", city: "Metro"})
 
     {:ok, cinema_params: %{name: "Blockbuster", address: "#2 Trailer park", city: "Polis"}, cinema: cinema}
