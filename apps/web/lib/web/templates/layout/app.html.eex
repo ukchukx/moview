@@ -4,23 +4,28 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="description" content="See movies showing in cinemas across Nigeria">
+    <meta name="author" content="Uk">
 
-    <title>Hello Moview</title>
+    <title>Moview</title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
-  <body>
-    <div class="container">
-      <header class="header">
-        <nav role="navigation">
-          <ul class="nav nav-pills pull-right">
-            <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
+  <body data-js-view-name="<%= js_view_name(@conn, @view_template) %>">
+    <div class="container-fluid">
+      <nav class="navbar navbar-toggleable-sm navbar-light bg-light">
+        <a class="navbar-brand" href="<%= home_link(@conn) %>">Moview</a>
+        <button type="button" class="navbar-toggler navbar-toggler-right"
+          aria-label="Toggle navigation" aria-controls="myNavbar" aria-expanded="false"
+          data-toggle="collapse" data-target="#myNavbar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav ml-auto">
+            <li><a href="<%= cinemas_link(@conn) %>">Cinemas</a></li>
           </ul>
-        </nav>
-        <span class="logo"></span>
-      </header>
+        </div>
+      </nav>
 
       <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
       <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
