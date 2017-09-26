@@ -1,19 +1,15 @@
-defmodule Moview.Movies.Application do
+defmodule Moview.Auth.Application do
   require Logger
-
-  alias Moview.Movies.{Schedule, Movie, Cinema}
 
   def start(type, _args) do
     import Supervisor.Spec, warn: false
 
     children = [
-      supervisor(Moview.Movies.Repo, []),
-      worker(Schedule.Impl.Cache, []),
-      worker(Movie.Impl.Cache, []),
-      worker(Cinema.Impl.Cache, [])
+      supervisor(Moview.Auth.Repo, []),
+      worker(Moview.Auth.User.Impl.Cache, [])
     ]
 
-    Logger.info("Movie app started.")
+    Logger.info("Auth app started.")
 
     case type do
       :normal ->
@@ -24,7 +20,7 @@ defmodule Moview.Movies.Application do
         Logger.info("#{old_node} is failing over to #{node()}")
     end
 
-    opts = [strategy: :one_for_one, name: {:global, Moview.Movies.Supervisor}]
+    opts = [strategy: :one_for_one, name: {:global, Moview.Auth.Supervisor}]
 
     Supervisor.start_link(children, opts)
   end
