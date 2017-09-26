@@ -1,4 +1,5 @@
 defmodule Moview.Web.Application do
+  require Logger
   use Application
 
   # See https://hexdocs.pm/elixir/Application.html
@@ -13,6 +14,8 @@ defmodule Moview.Web.Application do
       # Start your own worker by calling: Moview.Web.Worker.start_link(arg1, arg2, arg3)
       # worker(Moview.Web.Worker, [arg1, arg2, arg3]),
     ]
+
+    Logger.info("Web app started")
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
