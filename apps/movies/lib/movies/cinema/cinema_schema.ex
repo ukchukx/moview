@@ -42,10 +42,11 @@ defmodule Moview.Movies.Cinema.Schema.Data do
   use Moview.Movies.BaseSchema, :model
 
   embedded_schema do
-    field :name, :string
-    field :city, :string
-    field :address, :string
+    field :name, :string, default: ""
+    field :city, :string, default: ""
+    field :address, :string, default: ""
     field :branch_title, :string, default: ""
+    field :url, :string, default: ""
     field :delisted, :boolean, default: false
   end
 
@@ -56,7 +57,7 @@ defmodule Moview.Movies.Cinema.Schema.Data do
 
   def changeset(%__MODULE__{} = struct, params) do
     struct
-    |> cast(params, [:name, :city, :address, :branch_title, :delisted])
+    |> cast(params, [:name, :city, :address, :branch_title, :url, :delisted])
     |> validate_required([:name, :city, :address])
   end
 
