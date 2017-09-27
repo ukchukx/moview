@@ -7,14 +7,14 @@
     <meta name="description" content="See movies showing in cinemas across Nigeria">
     <meta name="author" content="Uk">
 
-    <title>Moview</title>
+    <title><%= @title %></title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
   <body data-js-view-name="<%= js_view_name(@conn, @view_template) %>">
     <div class="container-fluid">
       <nav class="navbar navbar-toggleable-sm navbar-light bg-light">
-        <a class="navbar-brand" href="<%= home_link(@conn) %>">Moview</a>
+        <a class="navbar-brand text-primary" href="<%= home_link(@conn) %>">moview</a>
         <button type="button" class="navbar-toggler navbar-toggler-right"
           aria-label="Toggle navigation" aria-controls="myNavbar" aria-expanded="false"
           data-toggle="collapse" data-target="#myNavbar">
