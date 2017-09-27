@@ -11,7 +11,7 @@ defmodule Moview.Movies.Cinema.Impl do
   end
 
   def create_cinema(%{name: name, address: addr, city: city} = params) do
-    movie_filter_fun = fn
+    cinema_filter_fun = fn
       %{data: %{name: ^name, address: ^addr, city: ^city}} -> true
       _ -> false
     end
@@ -20,7 +20,7 @@ defmodule Moview.Movies.Cinema.Impl do
       {:ok, []} ->
         do_create_cinema(params)
       {:ok, cinemas} ->
-        case Enum.filter(cinemas, movie_filter_fun) do
+        case Enum.filter(cinemas, cinema_filter_fun) do
             [] ->
               do_create_cinema(params)
           [cinema] ->
