@@ -21,6 +21,18 @@ body {
   .empty-text {
     font-size: 4rem;
   }
+
+  .card-img-top {
+    max-height: 400px;
+  }
+
+  .card {
+    .card-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
 }
 
 /* Phoenix flash messages */
