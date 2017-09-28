@@ -181,7 +181,7 @@ defmodule Moview.Movies.Cinema do
     ]
     |> Enum.map(&create_cinema/1)
 
-    Logger.info("Results of seeding cinemas: #{inspect results}")
+    Logger.info("Done seeding cinemas: #{inspect Enum.count(results)} results returned")
   end
 
 end
