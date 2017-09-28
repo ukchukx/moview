@@ -35,6 +35,10 @@ defmodule Moview.Movies.Movie do
     Impl.update_movie(id, params)
   end
 
+  def movie_exists?(params) do
+    Impl.movie_exists?(params)
+  end
+
   def get_movie(id) do
     Impl.get_movie(id)
   end

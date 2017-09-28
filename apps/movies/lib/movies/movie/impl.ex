@@ -15,7 +15,14 @@ defmodule Moview.Movies.Movie.Impl do
     delete_genres()
   end
 
-  def create_movie(%{rating: rating_name, genres: genres} = params) do
+  def create_movie(params) do
+    case get_duplicate(params) do
+      nil -> do_create_movie(params)
+      movie -> {:ok, movie}
+    end
+  end
+
+  defp do_create_movie(%{rating: rating_name, genres: genres} = params) do
     # Get the id of the rating with the supplied name
     rating_id =
       case get_rating_by_name(rating_name) do
@@ -64,6 +71,29 @@ defmodule Moview.Movies.Movie.Impl do
       %Ecto.Changeset{valid?: false} = changeset ->
         {:error, changeset}
     end
+  end
+
+  def movie_exists?(%{title: _, stars: _} = params) do
+    case get_duplicate(params) do
+      nil -> false
+      _ -> true
+    end
+  end
+
+  defp get_duplicate(%{title: title, stars: stars}) do
+    {:ok, movies} = get_movies()
+    Enum.find(movies, fn
+      %{data: %{title: ^title, stars: stars2}} -> list_equals?(stars, stars2)
+      _ -> false
+    end)
+  end
+
+  defp list_equals?(list1, list2) do
+    list1
+    |> Enum.drop_while(&(Enum.member?(list2, &1)))
+    |> Enum.count
+    |> Kernel.==(0)
+
   end
 
   def update_movie(id, params) do

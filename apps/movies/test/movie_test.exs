@@ -33,6 +33,10 @@ defmodule Moview.MovieTest do
     assert id
   end
 
+  test "movie exists", %{movie: %{data: %{title: title, stars: stars}}} do
+    assert true == API.movie_exists?(%{title: title, stars: stars})
+  end
+
   test "update movie", %{movie: %{id: id, data: %{slug: old_slug}}, movie_params: %{title: ptitle, stars: stars} = params} do
     {:ok, %{id: mid, data: %{title: title, stars: new_stars, slug: new_slug}}} = API.update_movie(id, params)
     refute old_slug == new_slug
