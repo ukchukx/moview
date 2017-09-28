@@ -1,5 +1,9 @@
-<div class="jumbotron">
-  <h2><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
-  <p class="lead">A productive web framework that<br />does not compromise speed and maintainability.</p>
-</div>
-
+<%= if Enum.count(@movies) > 0 do %>
+  <h1>Movies coming</h1>
+<% else %>
+  <div class="row mt-5 w-100">
+    <div class="col text-center">
+      <h1 class="font-weight-bold text-muted empty-text">No movies</h1>
+    </div>
+  </div>
+<% end %>
