@@ -16,7 +16,8 @@ use Mix.Config
 config :web, Moview.Web.Endpoint,
   load_from_system_env: true,
   url: [host: "localhost", port: System.get_env("MOVIEW_PORT")],
-  cache_static_manifest: "priv/static/cache_manifest.json"
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  version: Application.spec(:web, :vsn)
 
 # Do not print debug messages in production
 config :logger, level: :info

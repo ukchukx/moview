@@ -1,0 +1,7 @@
+#!/bin/bash
+
+sleep 3
+
+echo "Running migrations"
+bin/moview rpc Elixir.Release.Tasks migrate
+echo "Migrations done"
