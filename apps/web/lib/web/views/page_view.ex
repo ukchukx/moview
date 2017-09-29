@@ -2,14 +2,7 @@ defmodule Moview.Web.PageView do
   use Moview.Web, :view
   import Moview.Web.LayoutView, only: [page_title: 0, page_title: 1]
 
-
-  def render("meta.movie.html", %{movie: %{data: data}}) do
-    title =
-      case Map.get(data, :title) do
-        nil -> ""
-        title -> title
-      end
-
+  def render("meta.movie.html", %{movie: %{title: title}}) do
     ~E{
       <title><%= page_title(title) %></title>
       <meta name="description" content="TODO">
