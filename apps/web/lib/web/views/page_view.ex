@@ -4,7 +4,7 @@ defmodule Moview.Web.PageView do
 
   def synopsis(%{data: %{synopsis: synopsis}}) do
     case String.length(synopsis) > 100 do
-      false -> String.replace(synopsis, "...", "")
+      false -> String.replace_suffix(synopsis, "...", "")
        true -> String.slice(synopsis, 0..96) <> "..."
     end
   end
