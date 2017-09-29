@@ -26,11 +26,17 @@ defmodule Moview.Web.PageController do
         redirect(conn, to: page_path(conn, :movies))
       {:ok, %{rating_id: rating_id} =  movie} ->
         {:ok, %{data: %{name: rating}}} = Movie.get_rating(rating_id)
+        path = page_path(conn, :movie, slug)
+        url = page_url(conn, :movie, slug)
+        site_url = String.replace_suffix(url, path, "")
+
         movie =
           movie
           |> Map.get(:data)
           |> Map.put(:id, movie.id)
           |> Map.put(:rating, rating)
+          |> Map.put(:url, url)
+          |> Map.put(:site_url, site_url)
 
         {:ok, schedules} = Schedule.get_schedules_by_movie(movie.id)
         {:ok, cinemas} = Cinema.get_cinemas()

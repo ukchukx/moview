@@ -1,11 +1,25 @@
 defmodule Moview.Web.PageView do
   use Moview.Web, :view
-  import Moview.Web.LayoutView, only: [page_title: 0, page_title: 1]
+  import Moview.Web.LayoutView, only: [page_title: 0, site_name: 0, page_title: 1]
 
-  def render("meta.movie.html", %{movie: %{title: title}}) do
+  def render("meta.movie.html", %{movie: %{site_url: surl, url: url, title: t, poster: p, synopsis: s}}) do
+    pt = page_title(t)
     ~E{
-      <title><%= page_title(title) %></title>
-      <meta name="description" content="TODO">
+      <title><%= pt %></title>
+      <meta name="description" content="<%= s %>">
+      <meta property="og:site_name" content="<%= site_name() %>">
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="<%= url %>">
+      <meta property="og:title" content="<%= pt %>">
+      <meta property="og:description" content="<%= s %>">
+      <meta property="og:image" content="<%= p %>">
+      <meta name="twitter:image" content="<%= p %>">
+      <meta name="twitter:image" content="<%= p %> poster">
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:url" value="<%= url %>">
+      <meta name="twitter:title" value="<%= pt %>">
+      <meta name="twitter:domain" value="<%= surl %>">
+      <meta name="twitter:description" value="<%= s %>">
     }
   end
 

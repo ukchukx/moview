@@ -2,7 +2,9 @@ defmodule Moview.Web.LayoutView do
   use Moview.Web, :view
 
 
-  def page_title, do: "Moview"
+  def site_name, do: "Moview"
+
+  def page_title, do: site_name()
   def page_title(""), do: page_title()
   def page_title(string), do: "#{string} | #{page_title()}"
 
