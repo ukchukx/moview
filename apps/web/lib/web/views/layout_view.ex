@@ -2,6 +2,16 @@ defmodule Moview.Web.LayoutView do
   use Moview.Web, :view
 
 
+  def page_title, do: "Moview"
+  def page_title(""), do: page_title()
+  def page_title(string), do: "#{string} | #{page_title()}"
+
+  def render("meta.html", _) do
+    ~E{
+      <title> <%= page_title() %></title>
+    }
+  end
+
   def home_link(conn), do: page_path(conn, :movies)
   def cinemas_link(conn), do: page_path(conn, :cinemas)
 

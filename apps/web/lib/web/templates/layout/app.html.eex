@@ -4,10 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="See movies showing in cinemas across Nigeria">
     <meta name="author" content="Uk">
-
-    <title><%= @title %></title>
+    <%= render_existing(@view_module, "meta." <> @view_template, assigns) ||
+      render(Moview.Web.LayoutView, "meta.html", assigns) %>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
