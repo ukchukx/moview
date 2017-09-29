@@ -17,6 +17,7 @@ config :web, Moview.Web.Endpoint,
   load_from_system_env: true,
   url: [host: "localhost", port: System.get_env("MOVIEW_PORT")],
   cache_static_manifest: "priv/static/cache_manifest.json",
+  server: true,
   version: Application.spec(:web, :vsn)
 
 # Do not print debug messages in production
