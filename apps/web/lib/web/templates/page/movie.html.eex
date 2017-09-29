@@ -1,16 +1,21 @@
 <div class="row mt-2 mb-4">
-  <div class="col-sm-12 col-md-6">
+  <div class="col-sm-12 col">
     <div class="embed-responsive embed-responsive-16by9 rounded mb-3">
-      <iframe class="embed-responsive-item" src="<%= @movie.data.trailer %>?modestbranding=1&autohide=1&showinfo=0"></iframe>
+      <iframe class="embed-responsive-item" src="<%= @movie.trailer %>?modestbranding=1&autohide=1&showinfo=0"></iframe>
     </div>
     <div class="card p-3">
-        <h4 class="card-title"><%= @movie.data.title %></h4>
-        <h6 class="card-subtitle mb-2 text-muted">Rating: <%= @rating %></h6>
-        <h6 class="card-subtitle mb-2 text-muted"><%= @movie.data.runtime %> minutes</h6>
-        <p class="card-text"><%= Enum.join(@movie.data.stars, ", ") %></p>
-        <p class="card-text"><%= @movie.data.synopsis %></p>
+        <h4 class="card-title"><%= @movie.title %></h4>
+        <h6 class="card-subtitle mb-2 text-muted">Rating: <%= @movie.rating %></h6>
+        <h6 class="card-subtitle mb-2 text-muted"><%= @movie.runtime %> minutes</h6>
+        <p class="card-text"><%= Enum.join(@movie.stars, ", ") %></p>
+        <p class="card-text"><%= @movie.synopsis %></p>
     </div>
   </div>
-  <div class="col-sm-12 col-md-6">
+  <% if Enum.count(@schedules) do %>
+  <div class="col-sm-12">
+    <div class="card p-3">
+    </div>
   </div>
+  <% end %>
 </div>
+
