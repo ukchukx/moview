@@ -27,11 +27,15 @@ body {
     max-height: 400px;
   }
 
+  .one-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .card {
-    .card-title {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .card-title.schedule-title {
+      font-size: 1.2rem;
     }
   }
 }
