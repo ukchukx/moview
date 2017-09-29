@@ -21,6 +21,10 @@
     </div>
     <% end %>
   </div>
+  <% else %>
+  <div class="col text-center">
+    <h1 class="font-weight-bold text-muted empty-text">No schedules</h1>
+  </div>
   <% end %>
 </div>
 
