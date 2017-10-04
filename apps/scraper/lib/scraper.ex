@@ -1,4 +1,5 @@
 defmodule Moview.Scraper do
+  require Logger
   alias Moview.Movies.{Movie, Schedule}
 
   def scrape do
