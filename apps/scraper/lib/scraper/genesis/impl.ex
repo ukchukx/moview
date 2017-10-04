@@ -41,6 +41,18 @@ defmodule Moview.Scraper.Genesis.Impl do
     end)
     |> Enum.to_list
     |> List.flatten
+
+    # Remove movies without schedules
+    schedules = Schedule.get_schedules() |> elem(1)
+    orphaned_movies =
+      Movie.get_movies()
+      |> elem(1)
+      |> Enum.filter(fn %{id: id} -> Enum.find(schedules, fn %{movie_id: mid} -> mid == id end) == nil end)
+
+    Enum.each(orphaned_movies, fn movie ->
+      Movie.delete_movie(movie)
+      Logger.info "Deleted #{movie.data.title}"
+    end)
   end
 
   defp get_schedules_for_deletion(schedules, cinema_id, movie_id) do
@@ -163,6 +175,11 @@ defmodule Moview.Scraper.Genesis.Impl do
   defp expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, " ")}
   defp expand_time_string(str) when is_binary(str) do
     [day_range, time_string] = Utils.split_and_trim(str, ":", [parts: 2])
+    [day_range, time_string] =
+      case day_range do
+        "Daily  12" -> ["Daily", "12:00pm " <> time_string]
+        _ -> [day_range, time_string]
+      end
 
     Utils.split_and_trim(day_range, "&")
     |> Enum.map(&expand_range/1)
@@ -173,7 +190,6 @@ defmodule Moview.Scraper.Genesis.Impl do
 
   defp expand_range("Daily  12"), do: expand_time_string("Daily: 12:00pm")
   defp expand_range(str) do
-    IO.inspect(str, label: "str")
     case String.contains?(str, "-") do
       false ->
         case String.contains?(str, ",") do
