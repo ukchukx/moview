@@ -8,6 +8,7 @@ defmodule Moview.Scraper do
      Moview.Scraper.Filmhouse] |> Enum.each(&(&1.scrape()))
 
     # Remove movies without schedules
+    Logger.info "Done scraping. Will now remove movies without schedules..."
     schedules = Schedule.get_schedules() |> elem(1)
     orphaned_movies =
       Movie.get_movies()
@@ -18,5 +19,6 @@ defmodule Moview.Scraper do
       Movie.delete_movie(movie)
       Logger.info "Deleted #{movie.data.title}"
     end)
+    Logger.info "Done deleting movies without schedules."
   end
 end

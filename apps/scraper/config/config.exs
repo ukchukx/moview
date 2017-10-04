@@ -11,6 +11,10 @@ config :scraper, :omdb,
   base_url: "http://www.omdbapi.com/"
 
 config :scraper, Moview.Scraper.Scheduler,
+  overlap: false,
+  global: true,
+  timeout: 300_000,
+  timezone: "Africa/Lagos",
   jobs: [
     # Every Friday
     {"0 5 * * FRI", {Moview.Scraper, :scrape, []}}
