@@ -1,22 +1,39 @@
 defmodule Moview.Movies.Application do
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
+  require Logger
 
-  use Application
+  alias Moview.Movies.{Repo, Schedule, Movie, Cinema}
 
-  def start(_type, _args) do
+  def start(type, _args) do
     import Supervisor.Spec, warn: false
 
-    # Define workers and child supervisors to be supervised
     children = [
-      # Starts a worker by calling: Moview.Movies.Worker.start_link(arg1, arg2, arg3)
-      # worker(Moview.Movies.Worker, [arg1, arg2, arg3]),
+      supervisor(Repo, []),
+      worker(Schedule.Impl.Cache, []),
+      worker(Movie.Impl.Cache, []),
+      worker(Cinema.Impl.Cache, [])
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Moview.Movies.Supervisor]
-    Supervisor.start_link(children, opts)
+    Logger.info("Movie app started.")
+
+    case type do
+      :normal ->
+        Logger.info("Application is started on #{node()}")
+      {:takeover, old_node} ->
+        Logger.info("#{node()} is taking over #{old_node}")
+      {:failover, old_node} ->
+        Logger.info("#{old_node} is failing over to #{node()}")
+    end
+
+    opts = [strategy: :one_for_one, name: {:global, Moview.Movies.Supervisor}]
+
+    case Supervisor.start_link(children, opts) do
+      {:ok, _} = res ->
+        if Mix.env != :test do
+          Cinema.seed()
+        end
+        res
+      {:error, _} = res ->
+        res
+    end
   end
 end

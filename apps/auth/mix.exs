@@ -8,9 +8,10 @@ defmodule Moview.Auth.Mixfile do
      config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
-     elixir: "~> 1.4",
+     elixir: "~> 1.5",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     aliases: aliases(),
      deps: deps()]
   end
 
@@ -19,7 +20,8 @@ defmodule Moview.Auth.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger]]
+    [mod: {Moview.Auth.Application, []},
+     extra_applications: [:logger, :postgrex, :ecto, :comeonin]]
   end
 
   # Dependencies can be Hex packages:
@@ -36,6 +38,19 @@ defmodule Moview.Auth.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:postgrex, ">= 0.0.0"},
+      {:ecto, "~> 2.1"},
+      {:poison, "~> 3.1"},
+      {:ruid, "~> 0.1.0"},
+      {:joken, "~> 1.4"},
+      {:comeonin, "~> 2.0"}]
+  end
+
+  defp aliases do
+    [
+      "ecto.setup": ["ecto.create", "ecto.migrate"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "test": ["ecto.create --quiet", "ecto.migrate", "test"]
+    ]
   end
 end

@@ -5,6 +5,7 @@ defmodule Moview.Mixfile do
     [apps_path: "apps",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     version: "0.1.0",
      deps: deps()]
   end
 
@@ -21,6 +22,6 @@ defmodule Moview.Mixfile do
   # Dependencies listed here are available only for this project
   # and cannot be accessed from applications inside the apps folder
   defp deps do
-    []
+    [{:distillery, "~> 1.5", runtime: false}]
   end
 end

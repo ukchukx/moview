@@ -16,7 +16,10 @@ defmodule Moview.Web.Router do
   scope "/", Moview.Web do
     pipe_through :browser # Use the default browser stack
 
-    get "/", PageController, :index
+    get "/", PageController, :movies
+    get "/m/:slug", PageController, :movie
+    get "/cinemas", PageController, :cinemas
+    get "/*path", PageController, :catch_all
   end
 
   # Other scopes may use custom stacks.

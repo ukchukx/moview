@@ -4,12 +4,12 @@ defmodule Moview.Web.Mixfile do
   def project do
     [
       app: :web,
-      version: "0.0.1",
+      version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.4",
+      elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env),
       compilers: [:phoenix, :gettext] ++ Mix.compilers,
       start_permanent: Mix.env == :prod,
@@ -36,6 +36,8 @@ defmodule Moview.Web.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:movies, in_umbrella: true},
+      {:auth, in_umbrella: true},
       {:phoenix, "~> 1.3.0"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_html, "~> 2.10"},

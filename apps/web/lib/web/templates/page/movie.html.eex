@@ -1,0 +1,30 @@
+<div class="row mt-2 mb-4">
+  <div class="col-sm-12 col-md-6 mt-2">
+    <div class="embed-responsive embed-responsive-16by9 rounded mb-3">
+      <iframe class="embed-responsive-item" src="<%= @movie.trailer %>?modestbranding=1&autohide=1&showinfo=0"></iframe>
+    </div>
+    <div class="card p-3">
+        <h4 class="card-title"><%= @movie.title %></h4>
+        <h6 class="card-subtitle mb-2 text-muted">Rating: <%= @movie.rating %></h6>
+        <h6 class="card-subtitle mb-2 text-muted"><%= @movie.runtime %> minutes</h6>
+        <p class="card-text"><%= Enum.join(@movie.stars, ", ") %></p>
+        <p class="card-text"><%= @movie.synopsis %></p>
+    </div>
+  </div>
+  <%= if Enum.count(@schedules) > 0 do %>
+  <div class="col-sm-12 col-md-6 mt-2">
+    <%= for schedule <- @schedules do %>
+    <div class="card p-3 mb-2" data-sched-day="<%= schedule.day %>" data-sched-ts="<%= schedule.ts %>" data-sched-id="<%= schedule.id %>" >
+      <h4 class="card-title schedule-title"><%= schedule.cinema %></h4>
+      <h6 class="card-subtitle mb-2 text-muted"><%= schedule.day %></h6>
+      <p class="card-text"><%= schedule.time %></p>
+    </div>
+    <% end %>
+  </div>
+  <% else %>
+  <div class="col text-center">
+    <h1 class="font-weight-bold text-muted empty-text">No schedules</h1>
+  </div>
+  <% end %>
+</div>
+
