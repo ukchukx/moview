@@ -1,7 +1,9 @@
 #!/bin/bash
-cd apps/web
+source .env
+cd apps/web/assets
 ./node_modules/brunch/bin/brunch b -p
-MIX_ENV=prod mix phoenix.digest
+cd ..
+MIX_ENV=prod mix phx.digest
 cd ../..
 MIX_ENV=prod mix release --env=prod
 
