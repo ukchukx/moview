@@ -1,16 +1,16 @@
 defmodule Moview.Movies.Application do
   require Logger
 
-  alias Moview.Movies.{Schedule, Movie, Cinema}
+  alias Moview.Movies.{Repo, Schedule, Movie, Cinema}
 
   def start(type, _args) do
     import Supervisor.Spec, warn: false
 
     children = [
-      supervisor(Moview.Movies.Repo, []),
-      worker(Schedule.Impl.Cache, []),
+      supervisor(Repo, []),
       worker(Movie.Impl.Cache, []),
-      worker(Cinema.Impl.Cache, [])
+      worker(Cinema.Impl.Cache, []),
+      worker(Schedule.Impl.Cache, [])
     ]
 
     Logger.info("Movie app started.")

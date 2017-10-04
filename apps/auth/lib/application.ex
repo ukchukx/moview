@@ -1,12 +1,14 @@
 defmodule Moview.Auth.Application do
   require Logger
 
+  alias Moview.Auth.{Repo, User}
+
   def start(type, _args) do
     import Supervisor.Spec, warn: false
 
     children = [
-      supervisor(Moview.Auth.Repo, []),
-      worker(Moview.Auth.User.Impl.Cache, [])
+      supervisor(Repo, []),
+      worker(User.Impl.Cache, [])
     ]
 
     Logger.info("Auth app started.")

@@ -1,6 +1,4 @@
 defmodule Moview.Movies.Cinema.Impl do
-  import Moview.Movies.BaseSchema, only: [to_map: 1]
-
   alias Moview.Movies.Cinema.Schema, as: Cinema
   alias Moview.Movies.Repo
 
@@ -126,48 +124,66 @@ defmodule Moview.Movies.Cinema.Impl do
     @service_name Application.get_env(:movies, :services)[:cinema]
 
     def start_link do
-      cinemas = Repo.all(Cinema) |> to_map
-      GenServer.start_link(__MODULE__, %{cinemas: cinemas}, name: @service_name)
+      GenServer.start_link(__MODULE__, %{table: :cinemas}, name: @service_name)
     end
 
     def init(state) do
+      send(self(), :init)
       {:ok, state}
     end
 
-    def handle_call(:which_state, _, state), do: {:reply, state, state}
+    def handle_info(:init, %{table: table}) do
+      :ets.new(table, [:named_table, :set, :public])
 
-    def handle_call({:get_cinema, [id: id]}, _, %{cinemas: cinemas}) do
-      case Map.get(cinemas, id) do
-        nil ->
-          {:reply, {:error, :not_found}, %{cinemas: cinemas}}
-        cinema ->
-          {:reply, {:ok, cinema}, %{cinemas: cinemas}}
+      Cinema
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id}=cinema -> :ets.insert(table, {id, cinema})
+      end)
+
+      {:noreply, %{table: table}}
+    end
+
+    def handle_call({:get_cinema, [id: id]}, _, %{table: table} = state) do
+      case :ets.lookup(table, id) do
+        [] ->
+          {:reply, {:error, :not_found}, state}
+        [{_, cinema}] ->
+          {:reply, {:ok, cinema}, state}
       end
     end
 
-    def handle_call({:get_cinemas, [name: name]}, _, %{cinemas: cinemas}) do
+    def handle_call({:get_cinemas, [name: name]}, _, %{table: table} = state) do
       name = String.downcase(name)
-      results =
-        cinemas
-        |> Map.values
+      cinemas =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, c} -> c end)
         |> Enum.filter(&(String.downcase(&1.data.name) == name))
-      {:reply, {:ok, results}, %{cinemas: cinemas}}
+
+      {:reply, {:ok, cinemas}, state}
     end
 
-    def handle_call({:get_cinemas}, _, %{cinemas: cinemas}) do
-      {:reply, {:ok, Map.values(cinemas)}, %{cinemas: cinemas}}
+    def handle_call({:get_cinemas}, _, %{table: table} = state) do
+      cinemas =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, c} -> c end)
+
+      {:reply, {:ok, cinemas}, state}
     end
 
-    def handle_cast({:save_cinema, %{id: id} = cinema}, %{cinemas: cinemas}) do
-      {:noreply, %{cinemas: Map.put(cinemas, id, cinema)}}
+    def handle_cast({:save_cinema, %{id: id} = cinema}, %{table: table} = state) do
+      :ets.insert(table, {id, cinema})
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_cinema, [id: id]}, %{cinemas: cinemas}) do
-      {:noreply, %{cinemas: Map.delete(cinemas, id)}}
+    def handle_cast({:delete_cinema, [id: id]}, %{table: table} = state) do
+      :ets.delete(table, id)
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_cinemas}, _state) do
-      {:noreply, %{cinemas: %{}}}
+    def handle_cast({:delete_cinemas}, %{table: table} = state) do
+      :ets.delete_all_objects(table)
+      {:noreply, state}
     end
   end
 end

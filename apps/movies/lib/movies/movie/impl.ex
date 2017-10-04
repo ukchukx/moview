@@ -1,6 +1,5 @@
 defmodule Moview.Movies.Movie.Impl do
   import Ecto.Query
-  import Moview.Movies.BaseSchema, only: [to_map: 1]
 
   alias Moview.Movies.Movie.Schema, as: Movie
   alias Moview.Movies.Genre.Schema, as: Genre
@@ -372,122 +371,185 @@ defmodule Moview.Movies.Movie.Impl do
     @service_name Application.get_env(:movies, :services)[:movie]
 
     def start_link do
-      movies = Repo.all(Movie) |> to_map
-      genres = Repo.all(Genre) |> to_map
-      ratings = Repo.all(Rating) |> to_map
-      GenServer.start_link(__MODULE__, %{movies: movies, genres: genres, ratings: ratings}, name: @service_name)
+      map = %{movie_table: :movies,
+        genre_table: :genres,
+        rating_table: :ratings}
+      GenServer.start_link(__MODULE__, map, name: @service_name)
     end
 
 
     def init(state) do
+      send(self(), :init)
       {:ok, state}
     end
 
-    def handle_call(:which_state, _, state), do: {:reply, state, state}
+    def handle_info(:init, state) do
+      table_opts = [:named_table, :set, :public]
+      :ets.new(state.movie_table, table_opts)
+      :ets.new(state.genre_table, table_opts)
+      :ets.new(state.rating_table, table_opts)
 
-    def handle_call({:get_movie, [id: id]}, _, %{movies: movies} = state) do
-      case Map.get(movies, id) do
-        nil ->
+      Movie
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id} = movie -> :ets.insert(state.movie_table, {id, movie})
+      end)
+
+      Genre
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id} = genre -> :ets.insert(state.genre_table, {id, genre})
+      end)
+
+      Rating
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id} = rating -> :ets.insert(state.rating_table, {id, rating})
+      end)
+
+      state = Map.drop(state, [:genres, :movies, :ratings])
+      {:noreply, state}
+    end
+
+    def handle_call({:get_movie, [id: id]}, _, %{movie_table: table} = state) do
+      case :ets.lookup(table, id) do
+        [] ->
           {:reply, {:error, :not_found}, state}
-        movie ->
+        [{_, movie}] ->
           {:reply, {:ok, movie}, state}
       end
     end
 
-    def handle_call({:get_genre, [id: id]}, _, %{genres: genres} = state) do
-      case Map.get(genres, id) do
-        nil ->
+    def handle_call({:get_genre, [id: id]}, _, %{genre_table: table} = state) do
+      case :ets.lookup(table, id) do
+        [] ->
           {:reply, {:error, :not_found}, state}
-        genre ->
+        [{_, genre}] ->
           {:reply, {:ok, genre}, state}
       end
     end
 
-    def handle_call({:get_rating, [id: id]}, _, %{ratings: ratings} = state) do
-      case Map.get(ratings, id) do
-        nil ->
+    def handle_call({:get_rating, [id: id]}, _, %{rating_table: table} = state) do
+      case :ets.lookup(table, id) do
+        [] ->
           {:reply, {:error, :not_found}, state}
-        rating ->
+        [{_, rating}] ->
           {:reply, {:ok, rating}, state}
       end
     end
 
-    def handle_call({:get_movie, [slug: slug]}, _, %{movies: movies} = state) do
-      case Map.values(movies) |> Enum.find(&(&1.data.slug == slug)) do
-        nil ->
+    def handle_call({:get_movie, [slug: slug]}, _, %{movie_table: table} = state) do
+      result =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, obj} -> obj end)
+        |> Enum.filter(fn %{data: %{slug: s}} -> slug == s end)
+
+      case result do
+        [] ->
           {:reply, {:error, :not_found}, state}
-        movie ->
+        [movie] ->
           {:reply, {:ok, movie}, state}
       end
     end
 
-    def handle_call({:get_genre, [name: name]}, _, %{genres: genres} = state) do
+    def handle_call({:get_genre, [name: name]}, _, %{genre_table: table} = state) do
       name = String.downcase(name)
-      case Map.values(genres) |> Enum.find(&(String.downcase(&1.data.name) == name)) do
-        nil ->
+      result =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, obj} -> obj end)
+        |> Enum.filter(fn %{data: %{name: n}} -> name == String.downcase(n) end)
+
+      case result do
+        [] ->
           {:reply, {:error, :not_found}, state}
-        genre ->
+        [genre] ->
           {:reply, {:ok, genre}, state}
       end
     end
 
-    def handle_call({:get_rating, [name: name]}, _, %{ratings: ratings} = state) do
+    def handle_call({:get_rating, [name: name]}, _, %{rating_table: table} = state) do
       name = String.downcase(name)
-      case Map.values(ratings) |> Enum.find(&(String.downcase(&1.data.name) == name)) do
-        nil ->
+      result =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, obj} -> obj end)
+        |> Enum.filter(fn %{data: %{name: n}} -> name == String.downcase(n) end)
+
+      case result do
+        [] ->
           {:reply, {:error, :not_found}, state}
-        rating ->
+        [rating] ->
           {:reply, {:ok, rating}, state}
       end
     end
 
-    def handle_call({:get_movies}, _, %{movies: movies} = state) do
-      {:reply, {:ok, Map.values(movies)}, state}
+    def handle_call({:get_movies}, _, %{movie_table: table} = state) do
+      movies =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, movie} -> movie end)
+
+      {:reply, {:ok, movies}, state}
     end
 
-    def handle_call({:get_genres}, _, %{genres: genres} = state) do
-      {:reply, {:ok, Map.values(genres)}, state}
+    def handle_call({:get_genres}, _, %{genre_table: table} = state) do
+      genres =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, genre} -> genre end)
+
+      {:reply, {:ok, genres}, state}
     end
 
-    def handle_call({:get_ratings}, _, %{ratings: ratings} = state) do
-      {:reply, {:ok, Map.values(ratings)}, state}
+    def handle_call({:get_ratings}, _, %{rating_table: table} = state) do
+      ratings =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, rating} -> rating end)
+
+      {:reply, {:ok, ratings}, state}
     end
 
 
-    def handle_cast({:save_movie, %{id: id} = movie}, %{movies: movies} = state) do
-      {:noreply, %{state | movies: Map.put(movies, id, movie)}}
+    def handle_cast({:save_movie, %{id: id} = movie}, %{movie_table: table} = state) do
+      :ets.insert(table, {id, movie})
+      {:noreply, state}
     end
 
-    def handle_cast({:save_genre, %{id: id} = genre}, %{genres: genres} = state) do
-      {:noreply, %{state | genres: Map.put(genres, id, genre)}}
+    def handle_cast({:save_genre, %{id: id} = genre}, %{genre_table: table} = state) do
+      :ets.insert(table, {id, genre})
+      {:noreply, state}
     end
 
-    def handle_cast({:save_rating, %{id: id} = rating}, %{ratings: ratings} = state) do
-      {:noreply, %{state | ratings: Map.put(ratings, id, rating)}}
+    def handle_cast({:save_rating, %{id: id} = rating}, %{rating_table: table} = state) do
+      :ets.insert(table, {id, rating})
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_movie, [id: id]}, %{movies: movies} = state) do
-      {:noreply, %{state | movies: Map.delete(movies, id)}}
+    def handle_cast({:delete_movie, [id: id]}, %{movie_table: table} = state) do
+      :ets.delete(table, id)
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_genre, [id: id]}, %{genres: genres} = state) do
-      {:noreply, %{state | genres: Map.delete(genres, id)}}
+    def handle_cast({:delete_genre, [id: id]}, %{genre_table: table} = state) do
+      :ets.delete(table, id)
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_rating, [id: id]}, %{ratings: ratings} = state) do
-      {:noreply, %{state | ratings: Map.delete(ratings, id)}}
+    def handle_cast({:delete_rating, [id: id]}, %{rating_table: table} = state) do
+      :ets.delete(table, id)
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_movies}, state) do
-      {:noreply, %{state | movies: %{}}}
+    def handle_cast({:delete_movies}, %{movie_table: table} = state) do
+      :ets.delete_all_objects(table)
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_genres}, state) do
-      {:noreply, %{state | genres: %{}}}
+    def handle_cast({:delete_genres}, %{genre_table: table} = state) do
+      :ets.delete_all_objects(table)
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_ratings}, state) do
-      {:noreply, %{state | ratings: %{}}}
+    def handle_cast({:delete_ratings}, %{rating_table: table} = state) do
+      :ets.delete_all_objects(table)
+      {:noreply, state}
     end
   end
 end

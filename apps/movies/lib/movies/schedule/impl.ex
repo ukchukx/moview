@@ -1,5 +1,4 @@
 defmodule Moview.Movies.Schedule.Impl do
-  import Moview.Movies.BaseSchema, only: [to_map: 1]
   import Ecto.Query
 
   alias Moview.Movies.Schedule.Schema, as: Schedule
@@ -187,83 +186,91 @@ defmodule Moview.Movies.Schedule.Impl do
     @service_name Application.get_env(:movies, :services)[:schedule]
 
     def start_link do
-      scheds =
-        Schedule
-        |> Repo.all
-        |> to_map
-      GenServer.start_link(__MODULE__, %{schedules: scheds}, name: @service_name)
+      GenServer.start_link(__MODULE__, %{table: :schedules}, name: @service_name)
     end
 
     def init(state) do
+      send(self(), :init)
       {:ok, state}
     end
 
-    def handle_call(:which_state, _, state), do: {:reply, state, state}
+    def handle_info(:init, %{table: table}) do
+      :ets.new(table, [:named_table, :set, :public])
 
-    def handle_call({:get_schedule, [id: id]}, _, %{schedules: schedules}) do
-      case Map.get(schedules, id) do
-        nil ->
-          {:reply, {:error, :not_found}, %{schedules: schedules}}
-        schedule ->
-          {:reply, {:ok, schedule}, %{schedules: schedules}}
+      Schedule
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id}=sched -> :ets.insert(table, {id, sched})
+      end)
+
+      {:noreply, %{table: table}}
+    end
+
+    def handle_call({:get_schedule, [id: id]}, _, %{table: table} = state) do
+      case :ets.lookup(table, id) do
+        [] ->
+          {:reply, {:error, :not_found}, state}
+        [{_, schedule}] ->
+          {:reply, {:ok, schedule}, state}
       end
     end
 
-    def handle_call({:get_schedules, [cinema_id: cid]}, _, %{schedules: schedules}) do
-      results =
-        schedules
-        |> Map.values
+    def handle_call({:get_schedules, [cinema_id: cid]}, _, %{table: table} = state) do
+      schedules =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, s} -> s end)
         |> Enum.filter(&(&1.cinema_id == cid))
-      {:reply, {:ok, results}, %{schedules: schedules}}
+
+      {:reply, {:ok, schedules}, state}
     end
 
-    def handle_call({:get_schedules, [movie_id: mid]}, _, %{schedules: schedules}) do
-      results =
-        schedules
-        |> Map.values
+    def handle_call({:get_schedules, [movie_id: mid]}, _, %{table: table} = state) do
+      schedules =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, s} -> s end)
         |> Enum.filter(&(&1.movie_id == mid))
-      {:reply, {:ok, results}, %{schedules: schedules}}
+
+      {:reply, {:ok, schedules}, state}
     end
 
-    def handle_call({:get_schedules, [day: day, cinema_id: cid]}, _, %{schedules: schedules}) do
-      results =
-        schedules
-        |> Map.values
+    def handle_call({:get_schedules, [day: day, cinema_id: cid]}, _, %{table: table} = state) do
+      schedules =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, s} -> s end)
         |> Enum.filter(&(&1.cinema_id == cid and &1.data.day == day))
-      {:reply, {:ok, results}, %{schedules: schedules}}
+      {:reply, {:ok, schedules}, state}
     end
 
-    def handle_call({:get_schedules, [day: day, movie_id: mid]}, _, %{schedules: schedules}) do
-      results =
-        schedules
-        |> Map.values
+    def handle_call({:get_schedules, [day: day, movie_id: mid]}, _, %{table: table} = state) do
+      schedules =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, s} -> s end)
         |> Enum.filter(&(&1.movie_id == mid and &1.data.day == day))
-      {:reply, {:ok, results}, %{schedules: schedules}}
+
+      {:reply, {:ok, schedules}, state}
     end
 
-    def handle_call({:get_schedules, [name: name]}, _, %{schedules: schedules}) do
-      name = String.downcase(name)
-      results =
-        schedules
-        |> Map.values
-        |> Enum.filter(&(String.downcase(&1.data.name) == name))
-      {:reply, {:ok, results}, %{schedules: schedules}}
+    def handle_call({:get_schedules}, _, %{table: table} = state) do
+      schedules =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, s} -> s end)
+
+      {:reply, {:ok, schedules}, state}
     end
 
-    def handle_call({:get_schedules}, _, %{schedules: schedules}) do
-      {:reply, {:ok, Map.values(schedules)}, %{schedules: schedules}}
+    def handle_cast({:save_schedule, %{id: id} = schedule}, %{table: table} = state) do
+      :ets.insert(table, {id, schedule})
+      {:noreply, state}
     end
 
-    def handle_cast({:save_schedule, %{id: id} = schedule}, %{schedules: schedules}) do
-      {:noreply, %{schedules: Map.put(schedules, id, schedule)}}
+    def handle_cast({:delete_schedule, [id: id]}, %{table: table} = state) do
+      :ets.delete(table, id)
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_schedule, [id: id]}, %{schedules: schedules}) do
-      {:noreply, %{schedules: Map.delete(schedules, id)}}
-    end
-
-    def handle_cast({:delete_schedules}, _) do
-      {:noreply, %{schedules: %{}}}
+    def handle_cast({:delete_schedules}, %{table: table} = state) do
+      :ets.delete_all_objects(table)
+      {:noreply, state}
     end
 
   end
