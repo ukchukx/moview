@@ -5,7 +5,7 @@ defmodule Moview.Mixfile do
     [apps_path: "apps",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     version: "0.1.0",
+     version: "1.0.0",
      deps: deps()]
   end
 

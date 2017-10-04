@@ -46,7 +46,7 @@ end
 # will be used by default
 
 release :moview do
-  set version: current_version(:moview)
+  set version: Mix.Project.config[:version]
   set applications: [
     :runtime_tools,
     auth: :permanent,
