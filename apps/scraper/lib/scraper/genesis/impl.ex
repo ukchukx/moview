@@ -11,12 +11,12 @@ defmodule Moview.Scraper.Genesis.Impl do
 
     cinemas
     # Ignore cinemas without urls
-    |> Stream.filter(fn
+    |> Enum.filter(fn
       %{data: %{url: ""}} -> false
       nil -> false
       _ -> true
     end)
-    |> Stream.map(fn %{data: %{url: url, address: a, branch_title: b}, id: cinema_id} ->
+    |> Enum.map(fn %{data: %{url: url, address: a, branch_title: b}, id: cinema_id} ->
       Logger.info "Beginning to scrape: (#{b}) @ #{a}"
       scrape(url)
       |> Stream.map(&create_or_return_movie/1)
@@ -39,7 +39,6 @@ defmodule Moview.Scraper.Genesis.Impl do
       end)
       |> Enum.to_list
     end)
-    |> Enum.to_list
     |> List.flatten
   end
 

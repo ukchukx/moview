@@ -4,8 +4,8 @@ defmodule Moview.Scraper do
 
   def scrape do
     [Moview.Scraper.Genesis,
-     Moview.Scraper.Silverbird,
-     Moview.Scraper.Filmhouse] |> Enum.each(&(&1.scrape()))
+     Moview.Scraper.Filmhouse,
+     Moview.Scraper.Silverbird] |> Enum.each(&(&1.scrape()))
 
     # Remove movies without schedules
     Logger.info "Done scraping. Will now remove movies without schedules..."
