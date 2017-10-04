@@ -134,48 +134,57 @@ defmodule Moview.Auth.User.Impl do
 
     def start_link do
       users = Repo.all(User) |> to_map
-      GenServer.start_link(__MODULE__, %{users: users}, name: @service_name)
+      GenServer.start_link(__MODULE__, %{table: :users, users: users}, name: @service_name)
     end
 
-    def init(state) do
-      {:ok, state}
+    def init(%{users: users, table: table}) do
+      :ets.new(table, [:named_table, :set, :public])
+      for user <- users, do: :ets.insert(table, {user.id, user})
+      {:ok, %{table: table}}
     end
 
-    def handle_call({:get_user, [id: id]}, _, %{users: users}) do
-      case Map.get(users, id) do
-        nil ->
-          {:reply, {:error, :not_found}, %{users: users}}
-        user ->
-          {:reply, {:ok, user}, %{users: users}}
+    def handle_call({:get_user, [id: id]}, _, %{table: table} = state) do
+      case :ets.lookup(table, id) do
+        [] ->
+          {:reply, {:error, :not_found}, state}
+        [{_, user}] ->
+          {:reply, {:ok, user}, state}
       end
     end
 
-    def handle_call({:get_user, [email: email]}, _, %{users: users}) do
+    def handle_call({:get_user, [email: email]}, _, %{table: table} = state) do
       results =
-        users
-        |> Map.values
-        |> Enum.filter(&(&1.data.email == email))
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, obj} -> obj end)
+        |> Enum.filter(fn %{data: %{email: e}} -> email == e end)
 
       case results do
-        [] -> {:reply, {:error, :not_found}, %{users: users}}
-        [user] -> {:reply, {:ok, user}, %{users: users}}
+        [] -> {:reply, {:error, :not_found}, state}
+        [user] -> {:reply, {:ok, user}, state}
       end
     end
 
-    def handle_call({:get_users}, _, %{users: users}) do
-      {:reply, {:ok, Map.values(users)}, %{users: users}}
+    def handle_call({:get_users}, _, %{table: table} = state) do
+      results =
+        :ets.tab2list(table)
+        |> Enum.map(fn {_, obj} -> obj end)
+
+      {:reply, {:ok, results}, state}
     end
 
-    def handle_cast({:save_user, %{id: id} = user}, %{users: users}) do
-      {:noreply, %{users: Map.put(users, id, user)}}
+    def handle_cast({:save_user, %{id: id} = user}, %{table: table} = state) do
+      :ets.insert(table, {id, user})
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_user, [id: id]}, %{users: users}) do
-      {:noreply, %{users: Map.delete(users, id)}}
+    def handle_cast({:delete_user, [id: id]}, %{table: table} = state) do
+      :ets.delete(table, id)
+      {:noreply, state}
     end
 
-    def handle_cast({:delete_users}, _) do
-      {:noreply, %{users: %{}}}
+    def handle_cast({:delete_users}, %{table: table} = state) do
+      :ets.delete_all_objects(table)
+      {:noreply, state}
     end
   end
 end
