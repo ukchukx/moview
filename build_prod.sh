@@ -5,5 +5,5 @@ cd apps/web/assets
 cd ..
 MIX_ENV=prod mix phx.digest
 cd ../..
-MIX_ENV=prod mix release --env=prod
+MIX_ENV=prod mix release
 
