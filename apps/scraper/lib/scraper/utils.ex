@@ -9,7 +9,7 @@ defmodule Moview.Scraper.Utils do
   @movie_search_query "#{@tmdb_url}/search/movie?api_key=#{@tmdb_key}&language=en-US&page=1&include_adult=false"
   @image_url_base "http://image.tmdb.org/t/p"
 
-  @timeout if Mix.env == :prod, do: 10_000, else: 20_000
+  @timeout if Mix.env == :prod, do: 20_000, else: 30_000
 
 
   def make_request(url, decode \\ true) do
