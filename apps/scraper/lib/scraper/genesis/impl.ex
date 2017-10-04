@@ -1,8 +1,8 @@
 defmodule Moview.Scraper.Genesis.Impl do
   require Logger
   alias Moview.Movies.{Movie, Cinema, Schedule}
-
   alias Moview.Scraper.Utils
+
   @weekdays  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
   def scrape do

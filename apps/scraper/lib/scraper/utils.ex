@@ -172,8 +172,11 @@ defmodule Moview.Scraper.Utils do
         |> case do
           [] -> nil
           [one] -> one
-          _ = res -> # If more than one was returned, the most voted is likely to be what we want
+          _ = res ->
+            # If more than one was returned, remove results whose titles are longer than ours...
+            # then look for the most popular
             res
+            |> Enum.filter(fn %{"title" => t} -> String.length(t) == String.length(title) end)
             |> Enum.max_by(fn %{"vote_count" => x} -> x end, fn -> nil end)
         end
         |> case do
