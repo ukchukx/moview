@@ -1,6 +1,5 @@
 defmodule Moview.Movies.Movie.Impl do
   import Ecto.Query
-  import Moview.Movies.BaseSchema, only: [to_map: 1]
 
   alias Moview.Movies.Movie.Schema, as: Movie
   alias Moview.Movies.Genre.Schema, as: Genre
@@ -372,31 +371,44 @@ defmodule Moview.Movies.Movie.Impl do
     @service_name Application.get_env(:movies, :services)[:movie]
 
     def start_link do
-      movies = Repo.all(Movie) |> to_map
-      genres = Repo.all(Genre) |> to_map
-      ratings = Repo.all(Rating) |> to_map
       map = %{movie_table: :movies,
         genre_table: :genres,
-        rating_table: :ratings,
-        movies: movies,
-        genres: genres,
-        ratings: ratings}
+        rating_table: :ratings}
       GenServer.start_link(__MODULE__, map, name: @service_name)
     end
 
 
     def init(state) do
+      send(self(), :init)
+      {:ok, state}
+    end
+
+    def handle_info(:init, state) do
       table_opts = [:named_table, :set, :public]
       :ets.new(state.movie_table, table_opts)
       :ets.new(state.genre_table, table_opts)
       :ets.new(state.rating_table, table_opts)
 
-      for movie <- state.movies, do: :ets.insert(state.movie_table, {movie.id, movie})
-      for genre <- state.genres, do: :ets.insert(state.genre_table, {genre.id, genre})
-      for rating <- state.ratings, do: :ets.insert(state.rating_table, {rating.id, rating})
+      Movie
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id} = movie -> :ets.insert(state.movie_table, {id, movie})
+      end)
+
+      Genre
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id} = genre -> :ets.insert(state.genre_table, {id, genre})
+      end)
+
+      Rating
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id} = rating -> :ets.insert(state.rating_table, {id, rating})
+      end)
 
       state = Map.drop(state, [:genres, :movies, :ratings])
-      {:ok, state}
+      {:noreply, state}
     end
 
     def handle_call({:get_movie, [id: id]}, _, %{movie_table: table} = state) do

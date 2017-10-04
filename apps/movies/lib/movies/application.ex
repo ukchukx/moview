@@ -8,9 +8,9 @@ defmodule Moview.Movies.Application do
 
     children = [
       supervisor(Repo, []),
-      worker(Schedule.Impl.Cache, []),
       worker(Movie.Impl.Cache, []),
-      worker(Cinema.Impl.Cache, [])
+      worker(Cinema.Impl.Cache, []),
+      worker(Schedule.Impl.Cache, [])
     ]
 
     Logger.info("Movie app started.")

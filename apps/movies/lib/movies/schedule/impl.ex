@@ -1,5 +1,4 @@
 defmodule Moview.Movies.Schedule.Impl do
-  import Moview.Movies.BaseSchema, only: [to_map: 1]
   import Ecto.Query
 
   alias Moview.Movies.Schedule.Schema, as: Schedule
@@ -187,14 +186,24 @@ defmodule Moview.Movies.Schedule.Impl do
     @service_name Application.get_env(:movies, :services)[:schedule]
 
     def start_link do
-      scheds = Repo.all(Schedule) |> to_map
-      GenServer.start_link(__MODULE__, %{schedules: scheds, table: :schedules}, name: @service_name)
+      GenServer.start_link(__MODULE__, %{table: :schedules}, name: @service_name)
     end
 
-    def init(%{schedules: scheds, table: table}) do
+    def init(state) do
+      send(self(), :init)
+      {:ok, state}
+    end
+
+    def handle_info(:init, %{table: table}) do
       :ets.new(table, [:named_table, :set, :public])
-      for sched <- scheds, do: :ets.insert(table, {sched.id, sched})
-      {:ok, %{table: table}}
+
+      Schedule
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id}=sched -> :ets.insert(table, {id, sched})
+      end)
+
+      {:noreply, %{table: table}}
     end
 
     def handle_call({:get_schedule, [id: id]}, _, %{table: table} = state) do

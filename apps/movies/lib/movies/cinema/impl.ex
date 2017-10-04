@@ -1,6 +1,4 @@
 defmodule Moview.Movies.Cinema.Impl do
-  import Moview.Movies.BaseSchema, only: [to_map: 1]
-
   alias Moview.Movies.Cinema.Schema, as: Cinema
   alias Moview.Movies.Repo
 
@@ -126,14 +124,24 @@ defmodule Moview.Movies.Cinema.Impl do
     @service_name Application.get_env(:movies, :services)[:cinema]
 
     def start_link do
-      cinemas = Repo.all(Cinema) |> to_map
-      GenServer.start_link(__MODULE__, %{cinemas: cinemas, table: :cinemas}, name: @service_name)
+      GenServer.start_link(__MODULE__, %{table: :cinemas}, name: @service_name)
     end
 
-    def init(%{cinemas: cinemas, table: table}) do
+    def init(state) do
+      send(self(), :init)
+      {:ok, state}
+    end
+
+    def handle_info(:init, %{table: table}) do
       :ets.new(table, [:named_table, :set, :public])
-      for cinema <- cinemas, do: :ets.insert(table, {cinema.id, cinema})
-      {:ok, %{table: table}}
+
+      Cinema
+      |> Repo.all
+      |> Enum.each(fn
+        %{id: id}=cinema -> :ets.insert(table, {id, cinema})
+      end)
+
+      {:noreply, %{table: table}}
     end
 
     def handle_call({:get_cinema, [id: id]}, _, %{table: table} = state) do
