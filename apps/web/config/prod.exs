@@ -15,13 +15,31 @@ use Mix.Config
 # which you typically run after static files are built.
 config :web, Moview.Web.Endpoint,
   load_from_system_env: true,
+  http: [port: System.get_env("MOVIEW_PORT"), compress: true],
   url: [host: "localhost", port: System.get_env("MOVIEW_PORT")],
   cache_static_manifest: "priv/static/cache_manifest.json",
   server: true,
   version: Application.spec(:web, :vsn)
 
 # Do not print debug messages in production
-config :logger, level: :info
+config :logger,
+  level: :info
+
+config :logger,
+  backends: [{LoggerFileBackend, :info},
+               {LoggerFileBackend, :error}]
+
+config :logger, :info,
+  path: "../../logs/web/info.log",
+  format: "[$date] [$time] [$level] $metadata $levelpad$message\n",
+  metadata: [:date, :application, :module, :function, :line],
+  level: :warn
+
+config :logger, :error,
+  path: "../../logs/web/error.log",
+  format: "[$date] [$time] [$level] $metadata $levelpad$message\n",
+  metadata: [:date, :application, :module, :function, :line],
+  level: :error
 
 # ## SSL Support
 #

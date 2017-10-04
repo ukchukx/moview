@@ -19,3 +19,6 @@ config :scraper, Moview.Scraper.Scheduler,
     # Every Friday
     {"0 5 * * FRI", {Moview.Scraper, :scrape, []}}
   ]
+
+import_config "#{Mix.env}.exs"
+

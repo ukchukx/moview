@@ -21,7 +21,7 @@ defmodule Moview.Auth.Mixfile do
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
     [mod: {Moview.Auth.Application, []},
-     extra_applications: [:logger, :postgrex, :ecto, :comeonin]]
+     extra_applications: [:logger, :logger_file_backend, :postgrex, :ecto, :comeonin]]
   end
 
   # Dependencies can be Hex packages:
@@ -39,11 +39,12 @@ defmodule Moview.Auth.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [{:postgrex, ">= 0.0.0"},
-      {:ecto, "~> 2.1"},
-      {:poison, "~> 3.1"},
-      {:ruid, "~> 0.1.0"},
-      {:joken, "~> 1.4"},
-      {:comeonin, "~> 2.0"}]
+     {:ecto, "~> 2.1"},
+     {:poison, "~> 3.1"},
+     {:ruid, "~> 0.1.0"},
+     {:joken, "~> 1.4"},
+     {:comeonin, "~> 2.0"},
+     {:logger_file_backend, "~> 0.0.7"}]
   end
 
   defp aliases do
