@@ -19,25 +19,21 @@ defmodule Moview.Scraper.Genesis.Impl do
     |> Enum.map(fn %{data: %{url: url, address: a, branch_title: b}, id: cinema_id} ->
       Logger.info "Beginning to scrape: (#{b}) @ #{a}"
       scrape(url)
-      |> Stream.map(&create_or_return_movie/1)
-      |> Stream.filter(fn
+      |> Enum.map(&create_or_return_movie/1)
+      |> Enum.filter(fn
         %{movie: nil} -> false
         _ -> true
       end)
-      |> Stream.map(fn %{movie: %{id: movie_id, data: %{title: title}}, times: times} ->
+      |> Enum.map(fn %{movie: %{id: movie_id, data: %{title: title}}, times: times} ->
         Logger.info("Fetching schedules to clear for movie #{title}")
         {:ok, schedules} = Schedule.get_schedules()
         deletion_candidates = get_schedules_for_deletion(schedules, cinema_id, movie_id)
-        Logger.info("Clearing schedules for movie #{title}")
-        Enum.each(deletion_candidates, &(Schedule.delete_schedule(&1)))
 
         Logger.info("Creating schedules params for movie #{title}")
         schedule_params = get_schedule_params(times, cinema_id, movie_id)
 
-        Logger.info("Creating schedules for movie #{title}")
-        Enum.map(schedule_params, &(Schedule.create_schedule(&1)))
+        %{delete: deletion_candidates, create: schedule_params}
       end)
-      |> Enum.to_list
     end)
     |> List.flatten
   end
@@ -68,10 +64,13 @@ defmodule Moview.Scraper.Genesis.Impl do
         get_movie_details(#{title}) returned #{inspect res}
         """
         Map.put(map, :movie, nil)
-      {:ok, %{title: details_title, poster: _, stars: _} = details} ->
-        Movie.movie_exists?(details)
+      {:ok, %{title: details_title, poster: poster, stars: _} = details} ->
+        Enum.filter(movies, fn
+          %{data: %{title: ^details_title, poster: ^poster}} -> true
+          _ -> false
+        end)
         |> case  do
-          false ->
+          [] ->
             case Movie.create_movie(details) do
               {:ok, movie} ->
                 Logger.info "Created movie: #{details_title}"
@@ -80,15 +79,7 @@ defmodule Moview.Scraper.Genesis.Impl do
                 Logger.error "Creating movie with #{inspect details} returned #{err}"
                 Map.put(map, :movie, nil)
             end
-          true ->
-            movie =
-              movies
-              |> Enum.filter(fn
-                nil -> false
-                _ -> true
-              end)
-              |> Enum.find(fn %{data: data} -> Movie.movie_exists?(data) end)
-
+          [movie] ->
             Logger.info "Movie exists: #{movie.data.title}"
             Map.put(map, :movie, movie)
         end
@@ -103,8 +94,8 @@ defmodule Moview.Scraper.Genesis.Impl do
     url
     |> Utils.make_request(false)
     |> Floki.find("section.container > div.col-sm-8.col-md-9 > div.movie.release")
-    |> Stream.map(&movie_node/1) # Get as nodes
-    |> Stream.map(&extract_info_from_node/1)
+    |> Enum.map(&movie_node/1) # Get as nodes
+    |> Enum.map(&extract_info_from_node/1)
   end
 
   defp extract_info_from_node(movie_node) do
