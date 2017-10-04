@@ -2,7 +2,7 @@ defmodule Moview.Movies.Schedule.Impl do
   import Ecto.Query
 
   alias Moview.Movies.Schedule.Schema, as: Schedule
-  alias Moview.Movies.Repo
+  alias Moview.Movies.{Repo, Movie, Cinema}
 
   @service_name Application.get_env(:movies, :services)[:schedule]
 
@@ -10,9 +10,13 @@ defmodule Moview.Movies.Schedule.Impl do
     delete_schedules()
   end
 
+  def seed_from_db do
+    GenServer.cast(@service_name, {:seed, Repo.all(Schedule)})
+  end
+
   def create_schedule(%{cinema_id: cid, movie_id: mid, day: day, time: time, schedule_type: stype} = params) do
-    import Moview.Movies.Cinema, only: [get_cinema: 1]
-    import Moview.Movies.Movie, only: [get_movie: 1]
+    import Cinema, only: [get_cinema: 1]
+    import Movie, only: [get_movie: 1]
 
     err =
       case get_cinema(cid) do
@@ -196,13 +200,6 @@ defmodule Moview.Movies.Schedule.Impl do
 
     def handle_info(:init, %{table: table}) do
       :ets.new(table, [:named_table, :set, :public])
-
-      Schedule
-      |> Repo.all
-      |> Enum.each(fn
-        %{id: id}=sched -> :ets.insert(table, {id, sched})
-      end)
-
       {:noreply, %{table: table}}
     end
 
@@ -256,6 +253,11 @@ defmodule Moview.Movies.Schedule.Impl do
         |> Enum.map(fn {_, s} -> s end)
 
       {:reply, {:ok, schedules}, state}
+    end
+
+    def handle_cast({:seed, scheds}, %{table: table} = state) do
+      for sched <- scheds, do: :ets.insert(table, {sched.id, sched})
+      {:noreply, state}
     end
 
     def handle_cast({:save_schedule, %{id: id} = schedule}, %{table: table} = state) do

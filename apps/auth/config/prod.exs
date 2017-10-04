@@ -1,5 +1,7 @@
 use Mix.Config
 
+config :auth, :env, :prod
+
 config :auth, Moview.Auth.Repo,
   adapter: Ecto.Adapters.Postgres,
   database: "moview",

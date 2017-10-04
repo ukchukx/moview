@@ -11,6 +11,8 @@ defmodule Moview.Auth.User do
     |> Enum.reduce(%{}, fn %{id: id} = resource,  acc -> Map.put(acc, id, resource) end)
   end
 
+  def seed_from_db, do: Impl.seed_from_db()
+
   def create_user(params) do
     Impl.create_user(params)
   end

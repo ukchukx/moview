@@ -26,11 +26,13 @@ defmodule Moview.Auth.Application do
 
     case Supervisor.start_link(children, opts) do
       {:ok, _} = res ->
-        if Mix.env != :test do
+        if Application.get_env(:auth, :env) != :test do
           # Run migrations
           Logger.info "Running migrations"
           path = Application.app_dir(:auth, "priv/repo/migrations")
           Ecto.Migrator.run(Repo, path, :up, all: true)
+          # Seed cache
+          User.seed_from_db()
         end
         res
       {:error, _} = res ->
