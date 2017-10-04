@@ -41,18 +41,6 @@ defmodule Moview.Scraper.Genesis.Impl do
     end)
     |> Enum.to_list
     |> List.flatten
-
-    # Remove movies without schedules
-    schedules = Schedule.get_schedules() |> elem(1)
-    orphaned_movies =
-      Movie.get_movies()
-      |> elem(1)
-      |> Enum.filter(fn %{id: id} -> Enum.find(schedules, fn %{movie_id: mid} -> mid == id end) == nil end)
-
-    Enum.each(orphaned_movies, fn movie ->
-      Movie.delete_movie(movie)
-      Logger.info "Deleted #{movie.data.title}"
-    end)
   end
 
   defp get_schedules_for_deletion(schedules, cinema_id, movie_id) do
