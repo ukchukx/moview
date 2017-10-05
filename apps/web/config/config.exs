@@ -9,7 +9,7 @@ use Mix.Config
 config :web,
   namespace: Moview.Web
 
-config :web, port: System.get_env("MOVIEW_PORT")
+config :web, port: System.get_env("MOVIEW_PORT") || 1976
 
 # Configures the endpoint
 config :web, Moview.Web.Endpoint,
