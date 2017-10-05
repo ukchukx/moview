@@ -10,9 +10,21 @@ defmodule Moview.Scraper.Utils do
   @image_url_base "http://image.tmdb.org/t/p"
 
   @timeout if Mix.env == :prod, do: 20_000, else: 30_000
+  @sleep_duration if Mix.env == :prod, do: 500, else: 0
 
+
+  defp sleep_maybe do
+    if @slee_duration == 500 do
+      Process.sleep(@sleep_duration)
+    end
+  end
 
   def make_request(url, decode \\ true) do
+    # Sleep for 500ms, we don't get caught by TMDB's rate limit
+    if String.contains?(url, @tmdb_url) do
+      sleep_maybe()
+    end
+
     Logger.info "Fetching #{blank_out(url, [@omdb_key, @tmdb_key])}"
     body = HTTPotion.get(url, [timeout: @timeout]) |> gunzip_maybe
 
