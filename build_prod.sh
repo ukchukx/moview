@@ -1,4 +1,5 @@
 #!/bin/bash
+source ~/.bashrc
 source .env
 mix deps.get
 cd apps/web/assets

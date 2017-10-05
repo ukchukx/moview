@@ -48,7 +48,9 @@ defmodule Moview.Web.Endpoint do
   """
   def init(_key, config) do
     if config[:load_from_system_env] do
-      port = Application.get_env(:web, :port) || raise "expected the PORT environment variable to be set"
+      config_port = Application.get_env(:web, :port)
+      IO.puts "PORT is #{config_port}"
+      port = config_port || raise "expected the PORT environment variable to be set"
       {:ok, Keyword.put(config, :http, [:inet6, port: port])}
     else
       {:ok, config}
