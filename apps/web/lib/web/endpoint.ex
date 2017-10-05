@@ -36,7 +36,7 @@ defmodule Moview.Web.Endpoint do
   plug Plug.Session,
     store: :cookie,
     key: "_web_key",
-    signing_salt: "1RHu0TRR"
+    signing_salt: "Pm2KwKx7"
 
   plug Moview.Web.Router
 

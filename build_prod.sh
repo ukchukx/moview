@@ -2,8 +2,8 @@
 source .env
 mix deps.get
 cd apps/web/assets
-sudo npm install
-npm run compile
+npm install
+./node_modules/brunch/bin/brunch b -p
 cd ..
 MIX_ENV=prod mix phx.digest
 cd ../..
