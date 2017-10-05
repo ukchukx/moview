@@ -89,6 +89,7 @@ WORKDIR /
 
 # From https://gist.github.com/brienw/85db445a0c3976d323b859b1cdccef9a
 ENV VERSION 1.0.0
+ENX MIX_HOST 1976
 ENV APP moview
 ENV TZ Africa/Lagos
 
