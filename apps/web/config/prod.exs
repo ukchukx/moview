@@ -16,7 +16,7 @@ use Mix.Config
 config :web, Moview.Web.Endpoint,
   load_from_system_env: true,
   http: [port: System.get_env("MOVIEW_PORT"), compress: true],
-  url: [host: "localhost", port: System.get_env("MOVIEW_PORT")],,
+  url: [host: "localhost", port: System.get_env("MOVIEW_PORT")],
   check_origin: ["//127.0.0.1", "//109.237.25.250", "//localhost", "//moview.com.ng"],
   cache_static_manifest: "priv/static/cache_manifest.json",
   server: true,
