@@ -72,8 +72,8 @@ exports.config = {
   npm: {
     enabled: true,
     globals: {
-      $: 'jquery',
-      jQuery: 'jquery',
+      $: 'jquery-slim',
+      jQuery: 'jquery-slim',
       Tether: 'tether',
       bootstrap: 'bootstrap'
     }
