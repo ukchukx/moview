@@ -18,7 +18,7 @@ defmodule Moview.Scraper.Mixfile do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :httpotion],
+      extra_applications: [:logger, :logger_file_backend, :httpotion],
       mod: {Moview.Scraper.Application, []}
     ]
   end
@@ -30,7 +30,7 @@ defmodule Moview.Scraper.Mixfile do
      {:httpotion, "~> 3.0.2"},
      {:poison, "~> 3.1"},
      {:quantum, ">= 2.1.0"},
-     {:timex, "~> 3.0"}
-    ]
+     {:timex, "~> 3.0"},
+     {:logger_file_backend, "~> 0.0.7"}]
   end
 end

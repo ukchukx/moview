@@ -12,6 +12,10 @@ defmodule Moview.Auth.User.Impl do
     delete_users()
   end
 
+  def seed_from_db do
+    GenServer.cast(@service_name, {:seed, Repo.all(User)})
+  end
+
   def create_user(%{email: email, role: _, password: _} = params) do
     params = fix_role(params)
 
@@ -128,18 +132,14 @@ defmodule Moview.Auth.User.Impl do
   defmodule Cache do
     use GenServer
 
-    import Moview.Auth.User, only: [to_map: 1]
-
     @service_name Application.get_env(:auth, :services)[:user]
 
     def start_link do
-      users = Repo.all(User) |> to_map
-      GenServer.start_link(__MODULE__, %{table: :users, users: users}, name: @service_name)
+      GenServer.start_link(__MODULE__, %{table: :users}, name: @service_name)
     end
 
-    def init(%{users: users, table: table}) do
+    def init(%{table: table}) do
       :ets.new(table, [:named_table, :set, :public])
-      for user <- users, do: :ets.insert(table, {user.id, user})
       {:ok, %{table: table}}
     end
 
@@ -170,6 +170,11 @@ defmodule Moview.Auth.User.Impl do
         |> Enum.map(fn {_, obj} -> obj end)
 
       {:reply, {:ok, results}, state}
+    end
+
+    def handle_cast({:seed, users}, %{table: table} = state) do
+      for user <- users, do: :ets.insert(table, {user.id, user})
+      {:noreply, state}
     end
 
     def handle_cast({:save_user, %{id: id} = user}, %{table: table} = state) do

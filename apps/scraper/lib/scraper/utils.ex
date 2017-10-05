@@ -9,7 +9,7 @@ defmodule Moview.Scraper.Utils do
   @movie_search_query "#{@tmdb_url}/search/movie?api_key=#{@tmdb_key}&language=en-US&page=1&include_adult=false"
   @image_url_base "http://image.tmdb.org/t/p"
 
-  @timeout if Mix.env == :prod, do: 10_000, else: 20_000
+  @timeout if Mix.env == :prod, do: 20_000, else: 30_000
 
 
   def make_request(url, decode \\ true) do
@@ -172,8 +172,11 @@ defmodule Moview.Scraper.Utils do
         |> case do
           [] -> nil
           [one] -> one
-          _ = res -> # If more than one was returned, the most voted is likely to be what we want
+          _ = res ->
+            # If more than one was returned, remove results whose titles are longer than ours...
+            # then look for the most popular
             res
+            |> Enum.filter(fn %{"title" => t} -> String.length(t) == String.length(title) end)
             |> Enum.max_by(fn %{"vote_count" => x} -> x end, fn -> nil end)
         end
         |> case do

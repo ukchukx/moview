@@ -14,6 +14,12 @@ defmodule Moview.Movies.Movie.Impl do
     delete_genres()
   end
 
+  def seed_from_db do
+    GenServer.cast(@service_name, {:seed_movies, Repo.all(Movie)})
+    GenServer.cast(@service_name, {:seed_genres, Repo.all(Genre)})
+    GenServer.cast(@service_name, {:seed_ratings, Repo.all(Rating)})
+  end
+
   def create_movie(params) do
     case get_duplicate(params) do
       nil -> do_create_movie(params)
@@ -389,25 +395,6 @@ defmodule Moview.Movies.Movie.Impl do
       :ets.new(state.genre_table, table_opts)
       :ets.new(state.rating_table, table_opts)
 
-      Movie
-      |> Repo.all
-      |> Enum.each(fn
-        %{id: id} = movie -> :ets.insert(state.movie_table, {id, movie})
-      end)
-
-      Genre
-      |> Repo.all
-      |> Enum.each(fn
-        %{id: id} = genre -> :ets.insert(state.genre_table, {id, genre})
-      end)
-
-      Rating
-      |> Repo.all
-      |> Enum.each(fn
-        %{id: id} = rating -> :ets.insert(state.rating_table, {id, rating})
-      end)
-
-      state = Map.drop(state, [:genres, :movies, :ratings])
       {:noreply, state}
     end
 
@@ -506,6 +493,21 @@ defmodule Moview.Movies.Movie.Impl do
       {:reply, {:ok, ratings}, state}
     end
 
+
+    def handle_cast({:seed_movies, movies}, %{movie_table: table} = state) do
+      for movie <- movies, do: :ets.insert(table, {movie.id, movie})
+      {:noreply, state}
+    end
+
+    def handle_cast({:seed_ratings, ratings}, %{rating_table: table} = state) do
+      for rating <- ratings, do: :ets.insert(table, {rating.id, rating})
+      {:noreply, state}
+    end
+
+    def handle_cast({:seed_genres, genres}, %{genre_table: table} = state) do
+      for genre <- genres, do: :ets.insert(table, {genre.id, genre})
+      {:noreply, state}
+    end
 
     def handle_cast({:save_movie, %{id: id} = movie}, %{movie_table: table} = state) do
       :ets.insert(table, {id, movie})

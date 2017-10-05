@@ -37,7 +37,6 @@ environment :prod do
   set include_erts: true
   set include_src: false
   set cookie: :"a.fY9){<eo77*x7kQ!r,R(x1g>?@F:/MKTJ8_m<?|8YKLyECux.;,9|*`UJ(H~&t"
-  set post_start_hook: "rel/hooks/post_start"
 end
 
 # You may define one or more releases in this file.
@@ -46,7 +45,7 @@ end
 # will be used by default
 
 release :moview do
-  set version: current_version(:moview)
+  set version: Mix.Project.config[:version]
   set applications: [
     :runtime_tools,
     auth: :permanent,

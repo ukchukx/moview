@@ -9,6 +9,8 @@ defmodule Moview.Movies.Cinema do
 
   def clear_state, do: Impl.clear_state()
 
+  def seed_from_db, do: Impl.seed_from_db()
+
   def create_cinema(%{name: _, address: _, city: _} = params) do
     Impl.create_cinema(params)
   end

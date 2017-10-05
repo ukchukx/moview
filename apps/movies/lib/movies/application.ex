@@ -28,8 +28,17 @@ defmodule Moview.Movies.Application do
 
     case Supervisor.start_link(children, opts) do
       {:ok, _} = res ->
-        if Mix.env != :test do
+        if Application.get_env(:movies, :env) != :test do
+          # Run migrations
+          Logger.info "Running migrations"
+          path = Application.app_dir(:movies, "priv/repo/migrations")
+          Ecto.Migrator.run(Repo, path, :up, all: true)
+
           Cinema.seed()
+          # Seed caches
+          Movie.seed_from_db()
+          Cinema.seed_from_db()
+          Schedule.seed_from_db()
         end
         res
       {:error, _} = res ->

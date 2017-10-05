@@ -9,6 +9,8 @@ use Mix.Config
 config :web,
   namespace: Moview.Web
 
+config :web, port: System.get_env("MOVIEW_PORT")
+
 # Configures the endpoint
 config :web, Moview.Web.Endpoint,
   url: [host: "localhost"],

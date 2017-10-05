@@ -130,4 +130,6 @@ defmodule Moview.Movies.Movie do
   #
 
   def clear_state, do: Impl.clear_state()
+
+  def seed_from_db, do: Impl.seed_from_db()
 end

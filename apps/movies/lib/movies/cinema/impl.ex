@@ -8,6 +8,10 @@ defmodule Moview.Movies.Cinema.Impl do
     delete_cinemas()
   end
 
+  def seed_from_db do
+    GenServer.cast(@service_name, {:seed, Repo.all(Cinema)})
+  end
+
   def create_cinema(%{name: name, address: addr, city: city} = params) do
     cinema_filter_fun = fn
       %{data: %{name: ^name, address: ^addr, city: ^city}} -> true
@@ -134,13 +138,6 @@ defmodule Moview.Movies.Cinema.Impl do
 
     def handle_info(:init, %{table: table}) do
       :ets.new(table, [:named_table, :set, :public])
-
-      Cinema
-      |> Repo.all
-      |> Enum.each(fn
-        %{id: id}=cinema -> :ets.insert(table, {id, cinema})
-      end)
-
       {:noreply, %{table: table}}
     end
 
@@ -169,6 +166,11 @@ defmodule Moview.Movies.Cinema.Impl do
         |> Enum.map(fn {_, c} -> c end)
 
       {:reply, {:ok, cinemas}, state}
+    end
+
+    def handle_cast({:seed, cinemas}, %{table: table} = state) do
+      for cinema <- cinemas, do: :ets.insert(table, {cinema.id, cinema})
+      {:noreply, state}
     end
 
     def handle_cast({:save_cinema, %{id: id} = cinema}, %{table: table} = state) do

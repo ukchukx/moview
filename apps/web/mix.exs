@@ -23,7 +23,7 @@ defmodule Moview.Web.Mixfile do
   def application do
     [
       mod: {Moview.Web.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :logger_file_backend, :runtime_tools]
     ]
   end
 
@@ -35,15 +35,14 @@ defmodule Moview.Web.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [
-      {:movies, in_umbrella: true},
+    [ {:movies, in_umbrella: true},
       {:auth, in_umbrella: true},
       {:phoenix, "~> 1.3.0"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_html, "~> 2.10"},
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
-      {:cowboy, "~> 1.0"}
-    ]
+      {:cowboy, "~> 1.0"},
+      {:logger_file_backend, "~> 0.0.7"}]
   end
 end

@@ -20,7 +20,7 @@ defmodule Moview.Movies.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger, :postgrex, :ecto],
+    [extra_applications: [:logger, :logger_file_backend, :postgrex, :ecto],
      mod: {Moview.Movies.Application, []}]
   end
 
@@ -41,7 +41,8 @@ defmodule Moview.Movies.Mixfile do
     [{:postgrex, ">= 0.0.0"},
      {:ecto, "~> 2.1"},
      {:poison, "~> 3.1"},
-     {:ruid, "~> 0.1.0"}]
+     {:ruid, "~> 0.1.0"},
+     {:logger_file_backend, "~> 0.0.7"}]
   end
 
   defp aliases do

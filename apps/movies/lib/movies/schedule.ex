@@ -5,6 +5,7 @@ defmodule Moview.Movies.Schedule do
   alias Moview.Movies.Schedule.Impl
 
   def clear_state, do: Impl.clear_state()
+  def seed_from_db, do: Impl.seed_from_db()
 
   def create_schedule(%{day: _, time: _, schedule_type: _, movie_id: _, cinema_id: _} = params) do
     Impl.create_schedule(params)

@@ -95,6 +95,17 @@ defmodule Moview.Web.PageController do
   end
 
   defp time_string_to_tuple(time) when is_binary(time) do
+    time =
+      time
+      |> String.downcase
+      |> String.replace(".", ":") # Some crazy cinemas use . instead of : for time
+
+    time =
+      case String.contains?(time, ":") do
+        true -> time
+        false -> "#{time}:00"
+      end
+
     case String.contains?(time, "am") do
       true ->
         time = String.replace(time, "am", "")
