@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "bootstrap": "^4.0.0-alpha.6",
+    "tether": "^1.4.0",
     "font-awesome": "^4.7.0",
     "jquery-slim": "^3.0.0",
     "phoenix": "file:../../../deps/phoenix",
