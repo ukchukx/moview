@@ -1,8 +1,6 @@
 #!/bin/bash
-source ~/.bashrc
 source .env
 mix deps.get
-mix compile
 cd apps/web/assets
 npm install
 # After NPM has finished doing its own thing, kindly install the right version of Bootstrap
