@@ -116,9 +116,7 @@ defmodule Moview.Web.PageController do
     end
   end
   defp time_string_to_tuple(time, [add: hrs]) do
-    [hours, minutes] =
-      String.split(time, ":")
-      |> Enum.map(&(String.to_integer(&1)))
+    [hours, minutes] = time |> String.split(":") |> Enum.map(&String.to_integer/1)
 
     case hours == 12 do
       false -> # Add 12 hours to convert to 24-hour format
