@@ -1,3 +1,5 @@
  #!/bin/bash
- docker build -t moview .
+ cat Dockerfile | envsubst > DockerfileWithEnv
+ docker build -t moview -f DockerfileWithEnv .
+ rm DockerfileWithEnv
 
