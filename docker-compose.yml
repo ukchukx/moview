@@ -5,4 +5,8 @@ services:
     container_name: moview
     restart: unless-stopped
     network_mode: host
+    environment:
+      - MOVIEW_PORT=${MOVIEW_PORT}
+      - TMDB_KEY=${TMDB_KEY}
+      - OMDB_KEY=${OMDB_KEY}
 

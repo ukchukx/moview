@@ -88,10 +88,7 @@ RUN /usr/local/bin/mix local.hex --force && \
 WORKDIR /
 
 # From https://gist.github.com/brienw/85db445a0c3976d323b859b1cdccef9a
-ENV MOVIEW_PORT $MOVIEW_PORT
-ENV TMDB_KEY $TMDB_KEY
-ENV OMDB_KEY $OMDB_KEY
-ENV MIX_HOST $MOVIEW_PORT
+ENV MIX_HOST 1976
 ENV TZ Africa/Lagos
 
 RUN mkdir /app
