@@ -210,6 +210,12 @@ defmodule Moview.Scraper.Utils do
 
 
   defp blank_out(string, []), do: string
-  defp blank_out(string, [head|rest]), do: blank_out(String.replace(string, head, "******"), rest)
+  defp blank_out(string, [head|rest]) do
+    case head do
+      nil -> blank_out(string, rest)
+      "" -> blank_out(string, rest)
+       _ -> blank_out(String.replace(string, head, "******"), rest)
+    end
+  end
 
 end
