@@ -13,17 +13,15 @@ defmodule Moview.Scraper.Utils do
   @sleep_duration if Mix.env == :prod, do: 500, else: 0
 
 
-  defp sleep_maybe do
-    if @slee_duration == 500 do
+  defp sleep_maybe(url) do
+    if @sleep_duration == 500 && String.contains?(url, @tmdb_url) do
       Process.sleep(@sleep_duration)
     end
   end
 
   def make_request(url, decode \\ true) do
     # Sleep for 500ms, we don't get caught by TMDB's rate limit
-    if String.contains?(url, @tmdb_url) do
-      sleep_maybe()
-    end
+    Task.async(fn -> sleep_maybe(url) end) |> Task.await
 
     Logger.info "Fetching #{blank_out(url, [@omdb_key, @tmdb_key])}"
     body = HTTPotion.get(url, [timeout: @timeout]) |> gunzip_maybe
