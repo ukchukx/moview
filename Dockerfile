@@ -88,15 +88,16 @@ RUN /usr/local/bin/mix local.hex --force && \
 WORKDIR /
 
 # From https://gist.github.com/brienw/85db445a0c3976d323b859b1cdccef9a
-ENV VERSION 1.0.0
-ENV MIX_HOST 1976
-ENV APP moview
+ENV MOVIEW_PORT $MOVIEW_PORT
+ENV TMDB_KEY $TMDB_KEY
+ENV OMDB_KEY $OMDB_KEY
+ENV MIX_HOST $MOVIEW_PORT
 ENV TZ Africa/Lagos
 
 RUN mkdir /app
 WORKDIR /app
-COPY ./_build/prod/rel/$APP/releases/$VERSION/$APP.tar.gz /app/$APP.tar.gz
-RUN tar -zxvf $APP.tar.gz
+COPY ./_build/prod/rel/moview/releases/1.0.0/moview.tar.gz /app/moview.tar.gz
+RUN tar -zxvf moview.tar.gz
 
 
 ENTRYPOINT ["bin/moview"]
