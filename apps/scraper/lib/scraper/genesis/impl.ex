@@ -151,6 +151,7 @@ defmodule Moview.Scraper.Genesis.Impl do
   defp expand_time_string("Fri: " <> time_string), do: {"Fri", Utils.split_and_trim(time_string, " ")}
   defp expand_time_string("Sat: " <> time_string), do: {"Sat", Utils.split_and_trim(time_string, " ")}
   defp expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, " ")}
+  defp expand_time_string("Daily " <> str), do:  expand_time_string("Daily: #{String.trim(str)}")
   defp expand_time_string(str) when is_binary(str) do
     [day_range, time_string] = Utils.split_and_trim(str, ":", [parts: 2])
     [day_range, time_string] =
