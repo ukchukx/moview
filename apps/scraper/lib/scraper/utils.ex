@@ -1,12 +1,16 @@
 defmodule Moview.Scraper.Utils do
   require Logger
-  @tmdb_url Application.get_env(:scraper, :tmdb)[:base_url]
-  @tmdb_key Application.get_env(:scraper, :tmdb)[:key]
 
-  @omdb_url Application.get_env(:scraper, :omdb)[:base_url]
-  @omdb_key Application.get_env(:scraper, :omdb)[:key]
+  defp tmdb_url, do: Application.get_env(:scraper, :tmdb)[:base_url]
+  defp tmdb_key, do: Application.get_env(:scraper, :tmdb)[:key]
 
-  @movie_search_query "#{@tmdb_url}/search/movie?api_key=#{@tmdb_key}&language=en-US&page=1&include_adult=false"
+  defp omdb_url, do: Application.get_env(:scraper, :omdb)[:base_url]
+  defp omdb_key, do: Application.get_env(:scraper, :omdb)[:key]
+
+  defp movie_search_query do
+    "#{tmdb_url()}/search/movie?api_key=#{tmdb_key()}&language=en-US&page=1&include_adult=false"
+  end
+
   @image_url_base "http://image.tmdb.org/t/p"
 
   @timeout if Mix.env == :prod, do: 20_000, else: 30_000
@@ -14,7 +18,7 @@ defmodule Moview.Scraper.Utils do
 
 
   defp sleep_maybe(url) do
-    if @sleep_duration == 500 && String.contains?(url, @tmdb_url) do
+    if @sleep_duration == 500 && String.contains?(url, tmdb_url()) do
       Process.sleep(@sleep_duration)
     end
   end
@@ -23,7 +27,7 @@ defmodule Moview.Scraper.Utils do
     # Sleep for 500ms, we don't get caught by TMDB's rate limit
     Task.async(fn -> sleep_maybe(url) end) |> Task.await
 
-    Logger.info "Fetching #{blank_out(url, [@omdb_key, @tmdb_key])}"
+    Logger.info "Fetching #{blank_out(url, [omdb_key(), tmdb_key()])}"
     body = HTTPotion.get(url, [timeout: @timeout]) |> gunzip_maybe
 
     case decode do
@@ -101,7 +105,7 @@ defmodule Moview.Scraper.Utils do
 
 
   defp get_other_info(imdb_id) when is_binary(imdb_id) do
-    case make_request("#{@omdb_url}?apiKey=#{@omdb_key}&i=#{imdb_id}&plot=full") do
+    case make_request("#{omdb_url()}?apiKey=#{omdb_key()}&i=#{imdb_id}&plot=full") do
       %{"Response" => "True", "Rated" => rating, "Actors" => stars, "Plot" => plot} ->
         %{rating: rating, stars: split_and_trim(stars, ","), synopsis: plot}
       _ ->
@@ -130,7 +134,7 @@ defmodule Moview.Scraper.Utils do
   defp get_trailer(_), do: ""
 
 
-  defp movie_query(id), do: "#{@tmdb_url}/movie/#{id}?api_key=#{@tmdb_key}&language=en-US&append_to_response=videos"
+  defp movie_query(id), do: "#{tmdb_url()}/movie/#{id}?api_key=#{tmdb_key()}&language=en-US&append_to_response=videos"
 
 
   defp search_for_movie(title) do
@@ -139,7 +143,7 @@ defmodule Moview.Scraper.Utils do
       |> String.downcase
       |> URI.encode
 
-    %{"results" => results} = make_request("#{@movie_search_query}&query=#{encoded_title}")
+    %{"results" => results} = make_request("#{movie_search_query()}&query=#{encoded_title}")
     case results do
       [] -> {:error, :found_nothing}
       _ ->
