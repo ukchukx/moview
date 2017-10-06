@@ -200,6 +200,12 @@ defmodule Moview.Scraper.Filmhouse.Impl do
   defp expand_time_string("Sat: " <> time_string), do: {"Sat", Utils.split_and_trim(time_string, ",")}
   defp expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, ",")}
   defp expand_time_string(str) when is_binary(str) do
+    str =
+      case str do
+        <<range::binary-size(10)>> <> " " <> rest -> "#{range}: #{String.trim(rest)}"
+        _ -> str
+      end
+
     [day_range, time_string] = Utils.split_and_trim(str, ":", [parts: 2])
     time_string = String.downcase(time_string)
 
