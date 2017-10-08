@@ -4,7 +4,7 @@ mix deps.get
 cd apps/web/assets
 npm install
 # After NPM has finished doing its own thing, kindly install the right version of Bootstrap
-npm un bootstrap
+npm un bootstrap jquery
 npm i -S bootstrap@4.0.0-alpha.6
 cd ..
 ./patch_bootstrap.sh
