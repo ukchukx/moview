@@ -37,6 +37,10 @@ body {
     .card-title.schedule-title {
       font-size: 1.2rem;
     }
+
+    &.movie-card-item {
+      cursor: pointer;
+    }
   }
 }
 
