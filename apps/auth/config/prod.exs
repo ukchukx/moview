@@ -24,8 +24,8 @@ config :logger, :error,
 config :auth, Moview.Auth.Repo,
   adapter: Ecto.Adapters.Postgres,
   database: "moview",
-  username: "postgres",
-  password: "postgres",
+  username: System.get_env("DB_USER"),
+  password: System.get_env("DB_PASS"),
   hostname: "localhost",
   pool_size: 15
 
