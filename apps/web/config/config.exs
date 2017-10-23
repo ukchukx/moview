@@ -7,7 +7,8 @@ use Mix.Config
 
 # General application configuration
 config :web,
-  namespace: Moview.Web
+  namespace: Moview.Web,
+  cache: :service_cache
 
 config :web, port: System.get_env("MOVIEW_PORT") || 1976
 
