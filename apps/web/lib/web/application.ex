@@ -12,7 +12,7 @@ defmodule Moview.Web.Application do
       # Start the endpoint when the application starts
       supervisor(Moview.Web.Endpoint, []),
       # Start your own worker by calling: Moview.Web.Worker.start_link(arg1, arg2, arg3)
-      # worker(Moview.Web.Worker, [arg1, arg2, arg3]),
+      worker(Moview.Web.Cache.Impl.CacheServer, [])
     ]
 
     Logger.info("Web app started")
