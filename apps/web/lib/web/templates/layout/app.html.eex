@@ -8,6 +8,14 @@
     <%= render_existing(@view_module, "meta." <> @view_template, assigns) ||
       render(Moview.Web.LayoutView, "meta.html", assigns) %>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-68883437-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-68883437-1');
+    </script>
   </head>
 
   <body data-js-view-name="<%= js_view_name(@conn, @view_template) %>">
