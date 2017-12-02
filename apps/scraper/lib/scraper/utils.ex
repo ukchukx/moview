@@ -218,7 +218,12 @@ defmodule Moview.Scraper.Utils do
     case head do
       nil -> blank_out(string, rest)
       "" -> blank_out(string, rest)
-       _ -> blank_out(String.replace(string, head, "******"), rest)
+      _ ->
+        if Application.get_env(:scraper, :env) == :prod do
+          blank_out(String.replace(string, head, "******"), rest)
+        else
+          blank_out(string, rest)
+        end
     end
   end
 

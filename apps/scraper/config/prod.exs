@@ -3,6 +3,8 @@ use Mix.Config
 config :logger,
   level: :info
 
+config :scraper, env: :prod
+
 config :logger,
   backends: [{LoggerFileBackend, :info},
                {LoggerFileBackend, :error}]
