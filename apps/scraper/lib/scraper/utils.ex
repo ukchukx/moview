@@ -13,12 +13,12 @@ defmodule Moview.Scraper.Utils do
 
   @image_url_base "http://image.tmdb.org/t/p"
 
-  @timeout if Mix.env == :prod, do: 20_000, else: 30_000
-  @sleep_duration if Mix.env == :prod, do: 500, else: 0
+  @timeout if Application.get_env(:scraper, :env) == :prod, do: 20_000, else: 30_000
+  @sleep_duration 500
 
 
   defp sleep_maybe(url) do
-    if @sleep_duration == 500 && String.contains?(url, tmdb_url()) do
+    if String.contains?(url, tmdb_url()) do
       Process.sleep(@sleep_duration)
     end
   end
