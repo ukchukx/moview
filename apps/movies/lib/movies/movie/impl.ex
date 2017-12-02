@@ -86,8 +86,8 @@ defmodule Moview.Movies.Movie.Impl do
   end
 
   defp get_duplicate(%{title: title, stars: stars}) do
-    {:ok, movies} = get_movies()
-    Enum.find(movies, fn
+    Repo.all(Movie)
+    |> Enum.find(fn
       %{data: %{title: ^title, stars: stars2}} -> list_equals?(stars, stars2)
       _ -> false
     end)
