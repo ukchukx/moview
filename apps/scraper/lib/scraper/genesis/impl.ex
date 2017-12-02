@@ -4,9 +4,11 @@ defmodule Moview.Scraper.Genesis.Impl do
   alias Moview.Scraper.Utils
 
   @weekdays  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  @title_embellishments  ["(NEW)", "[3d]"]
 
   def do_scrape(cinemas) do
     cinemas
+    |> Enum.filter(fn %{data: %{url: url}} -> String.contains?(url, "lagos.html") end)
     # Ignore cinemas without urls
     |> Enum.filter(fn
       %{data: %{url: ""}} -> false
@@ -136,7 +138,12 @@ defmodule Moview.Scraper.Genesis.Impl do
     end)
   end
 
-  defp clean_title(title), do: title |> String.replace("(NEW)", "")
+  defp clean_title(title) do
+    Enum.reduce(@title_embellishments, title, fn to_remove, title ->
+      String.replace(title, to_remove, "")
+    end)
+    |> String.trim
+  end
 
   defp expand_time_string("Daily: "<> time_string) do
     @weekdays |> Enum.map(&(expand_time_string(&1, String.trim(time_string))))
@@ -157,8 +164,8 @@ defmodule Moview.Scraper.Genesis.Impl do
         _ -> [day_range, time_string]
       end
 
-    Utils.split_and_trim(day_range, "&")
-    |> Enum.map(&expand_range/1)
+    Utils.split_and_trim(day_range, ",")
+    |> Enum.map(fn dr -> Utils.split_and_trim(dr, "&") |> Enum.map(&expand_range/1) end)
     |> List.flatten
     |> Enum.map(&(expand_time_string(&1, time_string)))
   end
