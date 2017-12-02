@@ -1,12 +1,9 @@
 defmodule Moview.Scraper.Filmhouse.Impl do
   require Logger
-  alias Moview.Movies.{Movie, Cinema, Schedule}
+  alias Moview.Movies.{Movie, Schedule}
   alias Moview.Scraper.Utils
 
-  def scrape do
-    Logger.info "Begin scraping Filmhouse Cinemas"
-    {:ok, cinemas} = Cinema.get_cinemas_by_name("Filmhouse Cinemas")
-
+  def do_scrape(cinemas) do
     cinemas
     # Ignore cinemas without urls
     |> Enum.filter(fn
@@ -89,7 +86,7 @@ defmodule Moview.Scraper.Filmhouse.Impl do
                 Logger.error "Creating movie with #{inspect details} returned #{err}"
                 Map.put(map, :movie, nil)
             end
-          [movie] ->
+          [movie|_] ->
             Logger.info "Movie exists: #{movie.data.title}"
             Map.put(map, :movie, movie)
         end

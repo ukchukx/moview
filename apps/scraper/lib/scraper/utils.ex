@@ -13,18 +13,18 @@ defmodule Moview.Scraper.Utils do
 
   @image_url_base "http://image.tmdb.org/t/p"
 
-  @timeout if Mix.env == :prod, do: 20_000, else: 30_000
-  @sleep_duration if Mix.env == :prod, do: 500, else: 0
+  @timeout 20_000
+  @sleep_duration 2_000
 
 
   defp sleep_maybe(url) do
-    if @sleep_duration == 500 && String.contains?(url, tmdb_url()) do
+    # Sleep so we don't get caught by TMDB's rate limit
+    if String.contains?(url, tmdb_url()) do
       Process.sleep(@sleep_duration)
     end
   end
 
   def make_request(url, decode \\ true) do
-    # Sleep for 500ms, we don't get caught by TMDB's rate limit
     Task.async(fn -> sleep_maybe(url) end) |> Task.await
 
     Logger.info "Fetching #{blank_out(url, [omdb_key(), tmdb_key()])}"
@@ -218,7 +218,12 @@ defmodule Moview.Scraper.Utils do
     case head do
       nil -> blank_out(string, rest)
       "" -> blank_out(string, rest)
-       _ -> blank_out(String.replace(string, head, "******"), rest)
+      _ ->
+        if Application.get_env(:scraper, :env) == :prod do
+          blank_out(String.replace(string, head, "******"), rest)
+        else
+          blank_out(string, rest)
+        end
     end
   end
 
