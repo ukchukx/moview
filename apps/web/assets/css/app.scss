@@ -2,7 +2,11 @@
 $fa-font-path: "../fonts";
 @import "font-awesome";
 
-@import "bootstrap";
+$purple: #683bb7;
+$brand-primary: $purple; 
+$font-family-sans-serif: Lato, "Helvetica Neue", Helvetica, sans-serif; 
+$font-family-base: $font-family-sans-serif;
 
+@import "bootstrap";
 @import "custom";
 

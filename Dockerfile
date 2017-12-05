@@ -93,7 +93,7 @@ ENV TZ Africa/Lagos
 
 RUN mkdir /app
 WORKDIR /app
-COPY ./_build/prod/rel/moview/releases/1.1.0/moview.tar.gz /app/moview.tar.gz
+COPY ./_build/prod/rel/moview/releases/1.2.0/moview.tar.gz /app/moview.tar.gz
 RUN tar -zxvf moview.tar.gz
 
 
