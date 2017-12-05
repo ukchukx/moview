@@ -9,9 +9,6 @@ npm rebuild node-sass
 npm un bootstrap
 npm i -S bootstrap@4.0.0-alpha.6
 npm un jquery
-cd ..
-./patch_bootstrap.sh
-cd assets
 ./node_modules/brunch/bin/brunch b -p
 cd ..
 MIX_ENV=prod mix phx.digest

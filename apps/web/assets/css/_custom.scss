@@ -34,12 +34,17 @@ body {
   }
 
   .card {
-    .card-title.schedule-title {
-      font-size: 1.2rem;
-    }
+    border: none;
+    border-radius: 0rem;
 
     &.movie-card-item {
+      @extend .col-sm-12;
+      @extend .col-md-4;
       cursor: pointer;
+    }
+
+    .card-img-top {
+      border-radius: 0px;
     }
   }
 }

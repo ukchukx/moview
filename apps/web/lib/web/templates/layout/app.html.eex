@@ -27,7 +27,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="myNavbar">
-        <ul class="nav navbar-nav ml-auto">
+        <ul class="nav navbar-nav">
           <li><a href="<%= cinemas_link(@conn) %>">Cinemas</a></li>
         </ul>
       </div>
