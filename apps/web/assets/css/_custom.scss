@@ -41,6 +41,23 @@ body {
       @extend .col-sm-12;
       @extend .col-md-4;
       cursor: pointer;
+
+      & > .main-link {
+        position: absolute;
+        z-index: 1;
+        height: 100%;
+        width: 100%;
+      }
+
+      & .card-img-top, .card-body {
+        pointer-events: none;  /* IMPORTANT! Lets clicks fall through */
+        position: relative;
+        z-index: 10;         /* IMPORTANT! Makes actual content be on top of linked card */
+
+        & .button, a {
+            pointer-events: auto;    /* IMPORTANT! ... Except for buttons and links that should be clickable */
+        }
+      }
     }
 
     .card-img-top {
