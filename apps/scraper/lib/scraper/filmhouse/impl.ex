@@ -42,6 +42,7 @@ defmodule Moview.Scraper.Filmhouse.Impl do
 
   defp extract_info_from_node(movie_node) do
     title = movie_title(movie_node)
+    
     times =
       movie_node
       |> movie_time_strings
@@ -116,76 +117,91 @@ defmodule Moview.Scraper.Filmhouse.Impl do
   defp movie_time_strings({_, _, [_ | nodes]}) do
     [{"div", [{"class", "post_text"}], [_ | nodes]}] = nodes
     [{"div", _, [_ | nodes]}] = nodes
-    time_info =
-      nodes
-      |> Enum.reduce([], fn n, acc ->
-        case is_list(n) do
-          false ->
-            case n do
-              {"p", _, [first_node | rest]} ->
-                other_nodes =
-                  case first_node do
-                    {"strong", [], [str]} when is_binary(str) -> [first_node]
-                    {"strong", [], [_ | other_nodes]} ->
-                      Enum.map(other_nodes, fn
-                        item when is_binary(item) -> String.trim(item)
-                        item -> item
-                      end)
-                    _ -> [first_node]
-                  end
+    
+    nodes
+    |> Enum.reduce([], fn n, acc ->
+      case is_list(n) do
+        false ->
+          case n do
+            {"p", _, [first_node | rest]} ->
+              other_nodes =
+                case first_node do
+                  {"strong", [], [str]} when is_binary(str) -> [first_node]
+                  {"strong", [], [_ | other_nodes]} ->
+                    Enum.map(other_nodes, fn
+                      item when is_binary(item) -> String.trim(item)
+                      item -> item
+                    end)
+                  _ -> [first_node]
+                end
 
-                nodes =  other_nodes ++ rest |> Enum.filter(fn
+              nodes =  
+                other_nodes 
+                |> Kernel.++(rest)
+                |> Enum.filter(fn
                   {"br", [], []} -> false
-                  str when is_binary(str) -> str |> String.trim |> String.length |> Kernel.>(0)
+                  str when is_binary(str) -> 
+                    str 
+                    |> String.trim 
+                    |> String.length 
+                    |> Kernel.>(0)
                   _ -> true
                 end)
 
-                acc ++ nodes
-               _ -> acc ++ [n]
-            end
-          true ->
-            Enum.map(n, fn
-              {"p", _, nodes} -> nodes
-              stuff -> stuff
-            end) ++ acc
-        end
-      end)
-      |> Enum.filter(fn
-        {"strong", [], [child_node]} when is_binary(child_node) -> true
-        str when is_binary(str) -> true
-        _ -> false
-      end)
-
-    case rem(Enum.count(time_info), 2) do
-      0 -> time_info
-      1 ->
-        Enum.reduce(time_info, [], fn x, acc ->
-          case x do
-            x when is_binary(x) -> acc ++ [x]
-            x when is_tuple(x) -> # Handl Kano Cinema weirdness
-              case List.last(acc) do
-                nil -> [x]
-                y when is_binary(y) -> acc ++ [x]
-                y when is_tuple(y) ->
-                  {"strong", [],[day_range_start]} = y
-                  # day_range_end is assumed to be "to <day>:"
-                  # If it isn't, we're screwed
-                  {"strong", [], [day_range_end]} = x
-                  acc = List.delete_at(acc, -1)
-                  day_range = String.trim(day_range_start) <> " " <> String.trim(day_range_end)
-                  acc ++ [{"strong", [], [day_range]}]
-              end
+              acc ++ nodes
+             _ -> acc ++ [n]
           end
-        end)
-    end
-    |> Enum.chunk(2)
-    |> Enum.map(fn
-      [{"strong", [], [day_range]}, time_string] ->
-        day_range = String.replace_prefix(day_range, "Late Night Show", "")
-        String.trim(day_range) <> " " <> String.trim(time_string)
-      [day_range, time_string] ->
-        day_range = String.replace_prefix(day_range, "Late Night Show", "")
-        String.trim(day_range) <> " " <> String.trim(time_string)
+        true ->
+          n
+          |> Enum.map(fn
+            {"p", _, nodes} -> nodes
+            stuff -> stuff
+          end) 
+          |> Kernel.++(acc)
+      end
+    end)
+    |> Enum.filter(fn
+      {"strong", [], [child_node]} when is_binary(child_node) -> true
+      str when is_binary(str) -> true
+      _ -> false
+    end)
+    |> Enum.reduce([], fn el_or_str, acc -> 
+      case el_or_str do
+        {"strong", [], [day_range]} -> # Start another day range
+          day_range = 
+            day_range
+            |> String.replace_prefix("Late Night Show", "")
+            |> String.replace_suffix(" :", ":")
+            |> String.replace_suffix(",:", ":")
+            |> String.trim
+
+          day_range = 
+            case String.ends_with?(day_range, ":") do
+              false -> "#{day_range}:"
+              true -> day_range 
+            end
+
+          List.insert_at(acc, -1, day_range)
+        el_or_str ->
+          el_or_str = 
+            el_or_str
+            |> String.trim
+            |> String.replace_suffix(",", "")
+            |> String.replace_prefix(":", "")
+
+          case List.last(acc) do
+            nil -> [String.trim(el_or_str)]
+            time_str -> 
+              case String.ends_with?(time_str, ":") do # Is this the start of a day range?
+                true ->
+                  last = "#{time_str} #{el_or_str}"
+                  List.replace_at(acc, -1, last)
+                false ->
+                  last = "#{time_str}, #{el_or_str}"
+                  List.replace_at(acc, -1, last)                    
+              end
+          end            
+      end
     end)
   end
 
