@@ -150,17 +150,23 @@ defmodule Moview.Movies.Movie.Impl do
 
   def get_movies do
     GenServer.call(@service_name, {:get_movies})
-    case GenServer.call(@service_name, {:get_movies}) do
-      {:ok, []} ->
-        case Repo.all(Movie) do
-          [] ->
-            {:ok, []}
-          movies ->
-            Enum.each(movies, fn movie -> GenServer.cast(@service_name, {:save_movie, movie}) end)
-            {:ok, movies}
-        end
-      {:ok, _movies} = res -> res
-    end
+    movies =
+      case GenServer.call(@service_name, {:get_movies}) do
+        {:ok, []} ->
+          case Repo.all(Movie) do
+            [] -> []
+            movies ->
+              Enum.each(movies, fn movie -> GenServer.cast(@service_name, {:save_movie, movie}) end)
+              movies
+          end
+        {:ok, movies} -> movies
+      end
+      # Return latest first
+      |> Enum.sort(fn %{inserted_at: i1}, %{inserted_at: i2} -> 
+        naive_to_timestamp(i1) >= naive_to_timestamp(i2)
+      end)
+      
+    {:ok, movies}
   end
 
   def delete_movies do
@@ -369,6 +375,15 @@ defmodule Moview.Movies.Movie.Impl do
   def delete_genres do
     GenServer.cast(@service_name, {:delete_genres})
     Repo.delete_all(Genre)
+  end
+
+  defp naive_to_timestamp(naive_datetime) do
+    naive_datetime
+    |> NaiveDateTime.to_iso8601
+    |> (&<>/2).("+00:00")
+    |> DateTime.from_iso8601 # {:ok, date_time, 0}
+    |> elem(1)
+    |> DateTime.to_unix(:millisecond)
   end
 
   defmodule Cache do
