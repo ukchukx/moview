@@ -72,8 +72,6 @@ defmodule Moview.Scraper.Genesis.Impl do
         end)
         |> case do
           [] ->
-            Logger.warn "Details for #{details_title} #{inspect details}"
-
             case Movie.create_movie(details) do
               {:ok, movie} ->
                 Logger.debug "Created movie: #{details_title}"
