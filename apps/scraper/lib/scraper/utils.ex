@@ -27,19 +27,27 @@ defmodule Moview.Scraper.Utils do
   def make_request(url, decode \\ true) do
     Task.async(fn -> sleep_maybe(url) end) |> Task.await
 
-    Logger.info "Fetching #{blank_out(url, [omdb_key(), tmdb_key()])}"
-    body = HTTPotion.get(url, [timeout: @timeout]) |> gunzip_maybe
+    Logger.debug "Fetching #{blank_out(url, [omdb_key(), tmdb_key()])}"
+    
+    case HTTPotion.get(url, [timeout: @timeout]) do
+      %HTTPotion.Response{} = resp ->
+        body = gunzip_maybe(resp)
 
-    case decode do
-      true ->
-        Poison.decode!(body)
-      false ->
-        body
+        case decode do
+          true ->
+            {:ok, Poison.decode!(body)}
+          false ->
+            {:ok, body}
+        end
+
+      %HTTPotion.ErrorResponse{} = resp ->
+        Logger.error "Request error: #{inspect resp}"
+        {:error, :no_response}
     end
   end
 
   # Passing trim: true to String.split doesn't work for some reason
-  def split_and_trim(str, delim, opts \\ []), do: String.split(str, delim, opts) |> Enum.map(&String.trim/1)
+  def split_and_trim(str, delim, opts \\ [trim: true]), do: String.split(str, delim, opts) |> Enum.map(&String.trim/1)
 
 
   def get_image_url(width, image) do
@@ -59,29 +67,42 @@ defmodule Moview.Scraper.Utils do
     case search_for_movie(title) do
       {:error, _} = err -> err
       {:ok, %{"id" => id}} ->
-        %{"id" => ^id, "imdb_id" => imdb_id, "genres" => genres} = movie =
+        {:ok, %{"id" => ^id, "imdb_id" => imdb_id, "genres" => genres} = movie} =
           id
           |> movie_query
           |> make_request
 
         trailer = get_trailer(movie["videos"]["results"])
         genres = Enum.map(genres, &(&1["name"])) # We only need their names
+        release_date_tup = 
+          movie["release_date"] # yyyy-mm-dd
+          |> String.split("-")
+          |> Enum.map(&String.to_integer/1)
+          |> List.to_tuple
+
+        release_date = :calendar.datetime_to_gregorian_seconds({release_date_tup,{0,0,0}}) - 62167219200 |> Kernel.*(1000)
+
         case imdb_id do
           nil -> {:error, :no_imdb_id}
           _ ->
-            %{rating: rating, stars: stars, synopsis: synopsis} = get_other_info(imdb_id)
-            # Choose longer synopsis
-            synopsis = Enum.max_by([synopsis, movie["overview"]], &(String.length(&1)), fn -> nil end)
+            case get_other_info(imdb_id) do
+              {:ok, %{rating: rating, stars: stars, synopsis: synopsis} } ->
+                # Choose longer synopsis
+                synopsis = Enum.max_by([synopsis, movie["overview"]], &(String.length(&1)), fn -> nil end)
 
-            {:ok, %{
-              genres: genres,
-              rating: rating,
-              trailer: trailer,
-              stars: stars,
-              title: movie["title"],
-              poster: get_image_url(movie["poster_path"]),
-              runtime: movie["runtime"],
-              synopsis: synopsis}}
+                {:ok, %{
+                  genres: genres,
+                  rating: rating,
+                  trailer: trailer,
+                  stars: stars,
+                  title: movie["title"],
+                  poster: get_image_url(movie["poster_path"]),
+                  runtime: movie["runtime"],
+                  release_date: release_date,
+                  synopsis: synopsis}}
+                
+              err -> err
+            end
         end
     end
   end
@@ -106,13 +127,12 @@ defmodule Moview.Scraper.Utils do
 
   defp get_other_info(imdb_id) when is_binary(imdb_id) do
     case make_request("#{omdb_url()}?apiKey=#{omdb_key()}&i=#{imdb_id}&plot=full") do
-      %{"Response" => "True", "Rated" => rating, "Actors" => stars, "Plot" => plot} ->
-        %{rating: rating, stars: split_and_trim(stars, ","), synopsis: plot}
-      _ ->
-        %{rating: "", stars: "", synopsis: ""}
+      {:ok, %{"Response" => "True", "Rated" => rating, "Actors" => stars, "Plot" => plot}} ->
+        {:ok, %{rating: rating, stars: split_and_trim(stars, ","), synopsis: plot}}
+      _ -> {:error, "err_details"}
     end
   end
-  defp get_other_info(_), do: ""
+  defp get_other_info(_), do: {:error, "err_details"}
 
 
   defp get_trailer(video_list) when is_list(video_list) do
@@ -143,7 +163,7 @@ defmodule Moview.Scraper.Utils do
       |> String.downcase
       |> URI.encode
 
-    %{"results" => results} = make_request("#{movie_search_query()}&query=#{encoded_title}")
+    {:ok, %{"results" => results}} = make_request("#{movie_search_query()}&query=#{encoded_title}")
     case results do
       [] -> {:error, :found_nothing}
       _ ->

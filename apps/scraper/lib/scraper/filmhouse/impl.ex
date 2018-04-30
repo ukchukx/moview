@@ -5,43 +5,60 @@ defmodule Moview.Scraper.Filmhouse.Impl do
 
   def do_scrape(cinemas) do
     cinemas
-    # Ignore cinemas without urls
-    |> Enum.filter(fn
-      %{data: %{url: ""}} -> false
-      nil -> false
-      _ -> true
-    end)
     |> Enum.map(fn %{data: %{url: url, address: a, branch_title: b}, id: cinema_id} ->
       Logger.info "Beginning to scrape: (#{b}) @ #{a}"
-      scrape(url)
-      |> Enum.map(&create_or_return_movie/1)
-      |> Enum.filter(fn
-        %{movie: nil} -> false
-        _ -> true
-      end)
-      |> Enum.map(fn %{movie: %{id: movie_id, data: %{title: title}}, times: times} ->
-        Logger.info("Fetching schedules to clear for movie #{title}")
-        {:ok, schedules} = Schedule.get_schedules()
-        deletion_candidates = get_schedules_for_deletion(schedules, cinema_id, movie_id)
+      Task.async(fn  ->  
+        scrape(url)
+        |> Enum.map(&create_or_return_movie/1)
+        |> Enum.filter(fn
+          %{movie: nil} -> false
+          _ -> true
+        end)
+        |> Enum.map(fn %{movie: %{id: movie_id, data: %{title: title}}, times: times} ->
+          Logger.debug("Fetching schedules to clear for movie #{title}")
+          {:ok, schedules} = Schedule.get_schedules()
+          deletion_candidates = get_schedules_for_deletion(schedules, cinema_id, movie_id)
+          Logger.debug "Found #{length deletion_candidates} potential schedules to be cleared for #{title}"
 
-        Logger.info("Creating schedules params for movie #{title}")
-        schedule_params = get_schedule_params(times, cinema_id, movie_id)
+          Logger.debug("Creating schedules params for movie #{title}")
+          schedule_params = get_schedule_params(times, cinema_id, movie_id) 
+          Logger.debug "Found #{length schedule_params} schedules to be inserted for #{title}"
 
-        %{delete: deletion_candidates, create: schedule_params}
+          Logger.debug "Deleting schedules..."
+          Enum.each(deletion_candidates, &Schedule.delete_schedule/1)
+          Logger.debug "Creating new schedules..."
+          Enum.each(schedule_params, &Schedule.create_schedule/1)
+        end)
       end)
     end)
-    |> List.flatten
+    |> Enum.each(&Task.await(&1, 120_000))
   end
 
   defp scrape(url) do
     url
     |> Utils.make_request(false)
-    |> Floki.find("div.col-lg-7.col-md-6 > div.section_5")
-    |> Enum.map(&extract_info_from_node/1)
+    |> case do
+      {:ok, body} ->
+        body
+        |> Floki.find("div.col-lg-7.col-md-6 > div.section_5")
+        |> Enum.map(fn node ->
+          Task.async(fn -> extract_info_from_node(node) end)
+        end)
+        |> Enum.map(&Task.await/1)
+        |> Enum.filter(fn
+          nil -> false
+          _ -> true
+        end)
+
+      {:error, _} -> %{error: "Did not get response"}
+    end
   end
 
   defp extract_info_from_node(movie_node) do
     title = movie_title(movie_node)
+    Logger.debug "Extracted title: #{title}"
+    Logger.debug "Extracting times..."
+
     times =
       movie_node
       |> movie_time_strings
@@ -62,6 +79,7 @@ defmodule Moview.Scraper.Filmhouse.Impl do
   end
 
   defp create_or_return_movie(%{title: title} = map) do
+    Logger.debug "Attempt to create movie: #{title}..."
     {:ok, movies} = Movie.get_movies()
 
     case Utils.get_movie_details(title) do
@@ -76,18 +94,18 @@ defmodule Moview.Scraper.Filmhouse.Impl do
           %{data: %{title: ^details_title, poster: ^poster}} -> true
           _ -> false
         end)
-        |> case  do
+        |> case do
           [] ->
             case Movie.create_movie(details) do
               {:ok, movie} ->
-                Logger.info "Created movie: #{details_title}"
+                Logger.debug "Created movie: #{details_title}"
                 Map.put(map, :movie, movie)
               _ = err ->
                 Logger.error "Creating movie with #{inspect details} returned #{err}"
                 Map.put(map, :movie, nil)
             end
           [movie|_] ->
-            Logger.info "Movie exists: #{movie.data.title}"
+            Logger.debug "Movie exists: #{movie.data.title}"
             Map.put(map, :movie, movie)
         end
     end
@@ -116,76 +134,91 @@ defmodule Moview.Scraper.Filmhouse.Impl do
   defp movie_time_strings({_, _, [_ | nodes]}) do
     [{"div", [{"class", "post_text"}], [_ | nodes]}] = nodes
     [{"div", _, [_ | nodes]}] = nodes
-    time_info =
-      nodes
-      |> Enum.reduce([], fn n, acc ->
-        case is_list(n) do
-          false ->
-            case n do
-              {"p", _, [first_node | rest]} ->
-                other_nodes =
-                  case first_node do
-                    {"strong", [], [str]} when is_binary(str) -> [first_node]
-                    {"strong", [], [_ | other_nodes]} ->
-                      Enum.map(other_nodes, fn
-                        item when is_binary(item) -> String.trim(item)
-                        item -> item
-                      end)
-                    _ -> [first_node]
-                  end
 
-                nodes =  other_nodes ++ rest |> Enum.filter(fn
+    nodes
+    |> Enum.reduce([], fn n, acc ->
+      case is_list(n) do
+        false ->
+          case n do
+            {"p", _, [first_node | rest]} ->
+              other_nodes =
+                case first_node do
+                  {"strong", [], [str]} when is_binary(str) -> [first_node]
+                  {"strong", [], [_ | other_nodes]} ->
+                    Enum.map(other_nodes, fn
+                      item when is_binary(item) -> String.trim(item)
+                      item -> item
+                    end)
+                  _ -> [first_node]
+                end
+
+              nodes =
+                other_nodes
+                |> Kernel.++(rest)
+                |> Enum.filter(fn
                   {"br", [], []} -> false
-                  str when is_binary(str) -> str |> String.trim |> String.length |> Kernel.>(0)
+                  str when is_binary(str) ->
+                    str
+                    |> String.trim
+                    |> String.length
+                    |> Kernel.>(0)
                   _ -> true
                 end)
 
-                acc ++ nodes
-               _ -> acc ++ [n]
-            end
-          true ->
-            Enum.map(n, fn
-              {"p", _, nodes} -> nodes
-              stuff -> stuff
-            end) ++ acc
-        end
-      end)
-      |> Enum.filter(fn
-        {"strong", [], [child_node]} when is_binary(child_node) -> true
-        str when is_binary(str) -> true
-        _ -> false
-      end)
+              acc ++ nodes
+             _ -> acc ++ [n]
+          end
+        true ->
+          n
+          |> Enum.map(fn
+            {"p", _, nodes} -> nodes
+            stuff -> stuff
+          end)
+          |> Kernel.++(acc)
+      end
+    end)
+    |> Enum.filter(fn
+      {"strong", [], [child_node]} when is_binary(child_node) -> true
+      str when is_binary(str) -> true
+      _ -> false
+    end)
+    |> Enum.reduce([], fn el_or_str, acc ->
+      case el_or_str do
+        {"strong", [], [day_range]} -> # Start another day range
+          day_range =
+            day_range
+            |> String.replace_prefix("Late Night Show", "")
+            |> String.replace_suffix(" :", ":")
+            |> String.replace_suffix(",:", ":")
+            |> String.trim
 
-    case rem(Enum.count(time_info), 2) do
-      0 -> time_info
-      1 ->
-        Enum.reduce(time_info, [], fn x, acc ->
-          case x do
-            x when is_binary(x) -> acc ++ [x]
-            x when is_tuple(x) -> # Handl Kano Cinema weirdness
-              case List.last(acc) do
-                nil -> [x]
-                y when is_binary(y) -> acc ++ [x]
-                y when is_tuple(y) ->
-                  {"strong", [],[day_range_start]} = y
-                  # day_range_end is assumed to be "to <day>:"
-                  # If it isn't, we're screwed
-                  {"strong", [], [day_range_end]} = x
-                  acc = List.delete_at(acc, -1)
-                  day_range = String.trim(day_range_start) <> " " <> String.trim(day_range_end)
-                  acc ++ [{"strong", [], [day_range]}]
+          day_range =
+            case String.ends_with?(day_range, ":") do
+              false -> "#{day_range}:"
+              true -> day_range
+            end
+
+          List.insert_at(acc, -1, day_range)
+        el_or_str ->
+          el_or_str =
+            el_or_str
+            |> String.trim
+            |> String.replace_suffix(",", "")
+            |> String.replace_prefix(":", "")
+
+          case List.last(acc) do
+            nil -> [String.trim(el_or_str)]
+            time_str ->
+              case String.ends_with?(time_str, ":") do # Is this the start of a day range?
+                true ->
+                  last = "#{time_str} #{el_or_str}"
+                  List.replace_at(acc, -1, last)
+                false ->
+                  last = "#{time_str}, #{el_or_str}"
+                  List.replace_at(acc, -1, last)
               end
           end
-        end)
-    end
-    |> Enum.chunk(2)
-    |> Enum.map(fn
-      [{"strong", [], [day_range]}, time_string] ->
-        day_range = String.replace_prefix(day_range, "Late Night Show", "")
-        String.trim(day_range) <> " " <> String.trim(time_string)
-      [day_range, time_string] ->
-        day_range = String.replace_prefix(day_range, "Late Night Show", "")
-        String.trim(day_range) <> " " <> String.trim(time_string)
+      end
     end)
   end
 
@@ -197,6 +230,7 @@ defmodule Moview.Scraper.Filmhouse.Impl do
   defp expand_time_string("Sat: " <> time_string), do: {"Sat", Utils.split_and_trim(time_string, ",")}
   defp expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, ",")}
   defp expand_time_string(str) when is_binary(str) do
+    Logger.debug "Expanding time string: #{str}"
     str =
       case str do
         <<range::binary-size(10)>> <> " " <> rest -> "#{range}: #{String.trim(rest)}"
@@ -220,8 +254,13 @@ defmodule Moview.Scraper.Filmhouse.Impl do
           true -> Utils.split_and_trim(str, ",")
         end
       true ->
-        [start, stop] = Utils.split_and_trim(str, "to")
-        expand_range(start, stop, [])
+        [start, stop] =
+          case Utils.split_and_trim(str, "to") do
+            [start, stop] -> [start, stop]
+            [start] -> [start, start]
+          end
+
+        expand_range(start, stop, [])     
     end
   end
   defp expand_range(stop, stop, acc), do: acc ++ [stop]

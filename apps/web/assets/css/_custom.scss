@@ -33,32 +33,45 @@ body {
     text-overflow: ellipsis;
   }
 
+  .schedule-item {
+    @extend .card;
+    @extend .mb-2;
+    @extend .p-3;
+  }
+
+  .movie-card-item {
+    @extend .card;
+    @extend .col-sm-12;
+    @extend .col-md-4;
+    @extend .w-100;
+    @extend .p-0;
+
+    cursor: pointer;
+    border: none;
+    border-radius: 0rem;
+
+    & > .main-link {
+      position: absolute;
+      z-index: 1;
+      height: 100%;
+      width: 100%;
+    }
+
+    & .card-img-top, .card-body {
+      pointer-events: none;  /* IMPORTANT! Lets clicks fall through */
+      position: relative;
+      z-index: 10;         /* IMPORTANT! Makes actual content be on top of linked card */
+
+      & .button, a {
+          pointer-events: auto;    /* IMPORTANT! ... Except for buttons and links that should be clickable */
+      }
+    }
+  }
+
   .card {
     border: none;
     border-radius: 0rem;
 
-    &.movie-card-item {
-      @extend .col-sm-12;
-      @extend .col-md-4;
-      cursor: pointer;
-
-      & > .main-link {
-        position: absolute;
-        z-index: 1;
-        height: 100%;
-        width: 100%;
-      }
-
-      & .card-img-top, .card-body {
-        pointer-events: none;  /* IMPORTANT! Lets clicks fall through */
-        position: relative;
-        z-index: 10;         /* IMPORTANT! Makes actual content be on top of linked card */
-
-        & .button, a {
-            pointer-events: auto;    /* IMPORTANT! ... Except for buttons and links that should be clickable */
-        }
-      }
-    }
 
     .card-img-top {
       border-radius: 0px;
