@@ -8,33 +8,33 @@ defmodule Moview.Scraper.Genesis.Impl do
 
   def do_scrape(cinemas) do
     cinemas
-    |> Enum.filter(fn %{data: %{url: url}} -> String.contains?(url, "lagos.html") end)
-    # Ignore cinemas without urls
-    |> Enum.filter(fn
-      %{data: %{url: ""}} -> false
-      nil -> false
-      _ -> true
-    end)
     |> Enum.map(fn %{data: %{url: url, address: a, branch_title: b}, id: cinema_id} ->
       Logger.info "Beginning to scrape: (#{b}) @ #{a}"
-      scrape(url)
-      |> Enum.map(&create_or_return_movie/1)
-      |> Enum.filter(fn
-        %{movie: nil} -> false
-        _ -> true
-      end)
-      |> Enum.map(fn %{movie: %{id: movie_id, data: %{title: title}}, times: times} ->
-        Logger.info("Fetching schedules to clear for movie #{title}")
-        {:ok, schedules} = Schedule.get_schedules()
-        deletion_candidates = get_schedules_for_deletion(schedules, cinema_id, movie_id)
+      Task.async(fn ->  
+        scrape(url)
+        |> Enum.map(&create_or_return_movie/1)
+        |> Enum.filter(fn
+          %{movie: nil} -> false
+          _ -> true
+        end)
+        |> Enum.map(fn %{movie: %{id: movie_id, data: %{title: title}}, times: times} ->
+          Logger.debug("Fetching schedules to clear for movie #{title}")
+          {:ok, schedules} = Schedule.get_schedules()
+          deletion_candidates = get_schedules_for_deletion(schedules, cinema_id, movie_id)
+          Logger.debug "Found #{length deletion_candidates} schedules to be cleared for #{title}"
 
-        Logger.info("Creating schedules params for movie #{title}")
-        schedule_params = get_schedule_params(times, cinema_id, movie_id)
+          Logger.debug("Creating schedules params for movie #{title}")
+          schedule_params = get_schedule_params(times, cinema_id, movie_id)
+          Logger.debug "Found #{length schedule_params} schedules to be inserted for #{title}"
 
-        %{delete: deletion_candidates, create: schedule_params}
+          Logger.debug "Deleting schedules..."
+          Enum.each(deletion_candidates, &Schedule.delete_schedule/1)
+          Logger.debug "Creating new schedules..."
+          Enum.each(schedule_params, &Schedule.create_schedule/1)
+        end)
       end)
     end)
-    |> List.flatten
+    |> Enum.each(&Task.await(&1, 120_000))
   end
 
   defp get_schedules_for_deletion(schedules, cinema_id, movie_id) do
@@ -54,6 +54,7 @@ defmodule Moview.Scraper.Genesis.Impl do
   end
 
   defp create_or_return_movie(%{title: title} = map) do
+    Logger.debug "Attempt to create movie: #{title}..."
     {:ok, movies} = Movie.get_movies()
 
     case Utils.get_movie_details(title) do
@@ -63,23 +64,27 @@ defmodule Moview.Scraper.Genesis.Impl do
         get_movie_details(#{title}) returned #{inspect res}
         """
         Map.put(map, :movie, nil)
+
       {:ok, %{title: details_title, poster: poster, stars: _} = details} ->
         Enum.filter(movies, fn
           %{data: %{title: ^details_title, poster: ^poster}} -> true
           _ -> false
         end)
-        |> case  do
+        |> case do
           [] ->
+            Logger.warn "Details for #{details_title} #{inspect details}"
+
             case Movie.create_movie(details) do
               {:ok, movie} ->
-                Logger.info "Created movie: #{details_title}"
+                Logger.debug "Created movie: #{details_title}"
                 Map.put(map, :movie, movie)
               _ = err ->
                 Logger.error "Creating movie with #{inspect details} returned #{err}"
                 Map.put(map, :movie, nil)
             end
+
           [movie|_] ->
-            Logger.info "Movie exists: #{movie.data.title}"
+            Logger.debug "Movie exists: #{movie.data.title}"
             Map.put(map, :movie, movie)
         end
     end
@@ -92,31 +97,56 @@ defmodule Moview.Scraper.Genesis.Impl do
   defp scrape(url) do
     url
     |> Utils.make_request(false)
-    |> Floki.find("section.container > div.col-sm-8.col-md-9 > div.movie.release")
-    |> Enum.map(&movie_node/1) # Get as nodes
-    |> Enum.map(&extract_info_from_node/1)
+    |> case do
+      {:ok, body} ->
+        body
+        |> Floki.find("section.container > div.col-sm-8.col-md-9 > div.movie.release")
+        |> Enum.map(&movie_node/1)
+        |> Enum.map(fn node ->
+          Task.async(fn -> extract_info_from_node(node) end)
+        end)
+        |> Enum.map(&Task.await/1)
+        |> Enum.filter(fn
+          nil -> false
+          _ -> true
+        end)
+
+      {:error, _} -> %{error: "Did not get response"}
+    end
   end
 
   defp extract_info_from_node(movie_node) do
-    title = movie_title(movie_node)
-    times =
-      movie_node
-      |> movie_time_strings
-      |> Enum.map(&expand_time_string/1)
-      |> List.flatten
+    case movie_title(movie_node) do
+      title when is_binary(title) ->
+        Logger.debug "Extracted title: #{title}"
+        Logger.debug "Extracting times for #{title}..."
 
-    %{title: title, times: times}
+        times =
+          movie_node
+          |> movie_time_strings
+          |> Enum.map(&expand_time_string/1)
+          |> List.flatten
+
+        %{title: title, times: times}
+      _ -> 
+        Logger.warn "Could not extract_info_from_node"
+        nil
+    end
   end
 
   defp movie_node({_, _, nodes}), do:  Enum.at(nodes, 1)
 
   defp movie_title({_, _, [a_node |_]}) do
-    {"a", _, [title]} = a_node
-    title
-    |> clean_title
-    |> String.trim
-    |> String.downcase
-    |> String.capitalize
+    case a_node do
+      {"a", _, [title]} ->
+        title
+        |> clean_title
+        |> String.trim
+        |> String.downcase
+        |> String.capitalize
+
+      _ -> nil
+    end
   end
 
   defp movie_time_strings({_, _, [_|nodes]}) do
@@ -146,6 +176,7 @@ defmodule Moview.Scraper.Genesis.Impl do
   end
 
   defp expand_time_string("Daily: "<> time_string) do
+    Logger.debug "Expanding (daily) time string: #{time_string}"
     @weekdays |> Enum.map(&(expand_time_string(&1, String.trim(time_string))))
   end
   defp expand_time_string("Mon: " <> time_string), do: {"Mon", Utils.split_and_trim(time_string, " ")}
@@ -157,6 +188,7 @@ defmodule Moview.Scraper.Genesis.Impl do
   defp expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, " ")}
   defp expand_time_string("Daily " <> str), do:  expand_time_string("Daily: #{String.trim(str)}")
   defp expand_time_string(str) when is_binary(str) do
+    Logger.debug "Expanding time string: #{str}"
     [day_range, time_string] = Utils.split_and_trim(str, ":", [parts: 2])
     [day_range, time_string] =
       case day_range do

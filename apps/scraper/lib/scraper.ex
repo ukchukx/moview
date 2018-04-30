@@ -3,33 +3,28 @@ defmodule Moview.Scraper do
   alias Moview.Movies.{Movie, Schedule}
   alias Moview.Scraper.{Genesis, Filmhouse}
 
-  def scrape do
-    [Genesis, Filmhouse]
-    |> Enum.each(fn module ->
-      %{delete: deletion_list, create: creation_list} =
-        module.scrape
-        |> List.flatten
-        |> Enum.reduce(%{delete: [], create: []}, fn map, acc ->
-          deletes = acc.delete ++ map.delete
-          creates = acc.create ++ map.create
-          %{delete: deletes, create: creates}
-        end)
+  @callback scrape() :: map
 
-      Logger.info "Deleting stale schedules..."
-      Enum.each(deletion_list, &Schedule.delete_schedule/1)
-      Logger.info "Creating new schedules..."
-      Enum.each(creation_list, &Schedule.create_schedule/1)
+  def run do
+    [Genesis, Filmhouse]
+    |> Enum.map(fn module ->
+      Task.async(fn ->  
+        Logger.info "Run scraper for #{inspect module}..."
+        module.scrape
+        Logger.info "Done scraping #{inspect module}"
+      end)
     end)
+    |> Enum.each(&Task.await(&1, 300_000))
 
     # Remove movies without schedules
-    Logger.info "Will now remove movies without schedules..."
+    Logger.info "Remove movies without schedules..."
     schedules = Schedule.get_schedules() |> elem(1)
-    Movie.get_movies()
+    Movie.get_movies  
     |> elem(1)
     |> Enum.filter(fn %{id: id} -> Enum.find(schedules, fn %{movie_id: mid} -> mid == id end) == nil end)
     |> Enum.each(fn movie ->
       Movie.delete_movie(movie)
-      Logger.info "Deleted #{movie.data.title}"
+      Logger.debug "Deleted #{movie.data.title}"
     end)
     Logger.info "Finished."
   end

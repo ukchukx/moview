@@ -85,20 +85,12 @@ defmodule Moview.Movies.Movie.Impl do
     end
   end
 
-  defp get_duplicate(%{title: title, stars: stars}) do
+  defp get_duplicate(%{title: ti, poster: po, trailer: tr, runtime: ru, release_date: re}) do
     Repo.all(Movie)
     |> Enum.find(fn
-      %{data: %{title: ^title, stars: stars2}} -> list_equals?(stars, stars2)
+      %{data: %{title: ^ti, poster: ^po, trailer: ^tr, runtime: ^ru, release_date: ^re}} -> true
       _ -> false
     end)
-  end
-
-  defp list_equals?(list1, list2) do
-    list1
-    |> Enum.drop_while(&(Enum.member?(list2, &1)))
-    |> Enum.count
-    |> Kernel.==(0)
-
   end
 
   def update_movie(id, params) do
@@ -161,10 +153,8 @@ defmodule Moview.Movies.Movie.Impl do
           end
         {:ok, movies} -> movies
       end
-      # Return latest first
-      |> Enum.sort(fn %{inserted_at: i1}, %{inserted_at: i2} -> 
-        naive_to_timestamp(i1) >= naive_to_timestamp(i2)
-      end)
+      # Sort on release_date
+      |> Enum.sort(fn %{data: %{release_date: i1}}, %{data: %{release_date: i2}} -> i1 >= i2 end)
       
     {:ok, movies}
   end
@@ -375,15 +365,6 @@ defmodule Moview.Movies.Movie.Impl do
   def delete_genres do
     GenServer.cast(@service_name, {:delete_genres})
     Repo.delete_all(Genre)
-  end
-
-  defp naive_to_timestamp(naive_datetime) do
-    naive_datetime
-    |> NaiveDateTime.to_iso8601
-    |> (&<>/2).("+00:00")
-    |> DateTime.from_iso8601 # {:ok, date_time, 0}
-    |> elem(1)
-    |> DateTime.to_unix(:millisecond)
   end
 
   defmodule Cache do

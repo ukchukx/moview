@@ -17,7 +17,7 @@ config :scraper, Moview.Scraper.Scheduler,
   timezone: "Africa/Lagos",
   jobs: [
     # Every Friday
-    {"0 5 * * FRI", {Moview.Scraper, :scrape, []}}
+    {"0 5 * * FRI", {Moview.Scraper, :run, []}}
   ]
 
 import_config "#{Mix.env}.exs"

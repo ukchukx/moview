@@ -1,7 +1,7 @@
 <%= if Enum.count(@movies) > 0 do %>
   <div class="row mt-2">
   <%= for movie <- @movies do %>
-    <div class="movie-card-item p-0 card w-100">
+    <div class="movie-card-item">
       <a href="<%= movie_url(@conn, movie) %>" class="main-link"></a>
       <img class="card-img-top" src="<%= movie.data.poster %>" alt="<%= movie.data.title %> poster">
 
@@ -10,7 +10,7 @@
         <p class="card-text text-muted"><%= synopsis(movie) %></p>
         <a href="/cinemas" class="card-link">Details</a>
       </div>
-    </div>    
+    </div>
   <% end %>
   </div>
 <% else %>

@@ -84,6 +84,7 @@ defmodule Moview.Movies.Movie.Schema.Data do
     field :trailer, :string, default: ""
     field :synopsis, :string, default: ""
     field :runtime, :integer, default: 0
+    field :release_date, :integer, default: 0
     field :stars, {:array, :string}
     field :poster, :string, default: ""
     field :delisted, :boolean, default: false
@@ -96,8 +97,8 @@ defmodule Moview.Movies.Movie.Schema.Data do
 
   def changeset(%__MODULE__{} = struct, params) do
     struct
-    |> cast(params, [:title, :slug, :trailer, :synopsis, :runtime, :stars, :poster, :delisted])
-    |> validate_required([:title, :runtime, :stars])
+    |> cast(params, [:title, :slug, :trailer, :synopsis, :runtime, :stars, :poster, :delisted, :release_date])
+    |> validate_required([:title, :runtime, :stars, :release_date])
   end
 
 end
