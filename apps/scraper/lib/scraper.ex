@@ -6,7 +6,7 @@ defmodule Moview.Scraper do
   @callback scrape() :: map
 
   def run do
-    [Genesis, Filmhouse, Ozone, Silverbird]
+    [Filmhouse, Ozone]
     |> Enum.map(fn module ->
       Task.async(fn ->  
         Logger.info "Run scraper for #{inspect module}..."
