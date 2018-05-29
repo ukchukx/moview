@@ -1,7 +1,9 @@
-defmodule Moview.Scraper.Silverbird.Impl do
+defmodule Moview.Scraper.Ozone.Impl do
   require Logger
   alias Moview.Movies.Schedule
   alias Moview.Scraper.{Common, Utils}
+
+  @title_embellishments  ["NEW"]
 
   def do_scrape(cinemas) do
     cinemas
@@ -40,13 +42,7 @@ defmodule Moview.Scraper.Silverbird.Impl do
     |> case do
       {:ok, body} ->
         body
-        |> Floki.find(".entry-item > .entry-content")
-        |> Enum.filter(fn node -> # Remove nodes without showtimes
-          node
-          |> Floki.raw_html
-          |> String.contains?("COMING SOON")
-          |> Kernel.==(false)
-        end)
+        |> Floki.find("div.col-lg-7 > div.section_5")
         |> Enum.map(fn node ->
           Task.async(fn -> extract_info_from_node(node) end)
         end)
@@ -68,47 +64,38 @@ defmodule Moview.Scraper.Silverbird.Impl do
     times =
       movie_node
       |> movie_time_string
-      |> List.flatten
-      |> Enum.map(&expand_time_string/1)
+      |> expand_time_string
       |> List.flatten
 
     %{title: title, times: times}
   end
 
-  defp movie_title({_, _, [title_node | _]}) do
-    {"h4", _, [{"a", _, [title]} | _]} = title_node
+  defp movie_title({_, _, [div_node | _]}) do
+    {"div", [{"class", "clearfix"} | _], [{"b", _, [{_, _, [title | _]}]} | _]} = div_node
 
     title 
     |> Common.remove_multiple_white_spaces
+    |> Common.clean_title(@title_embellishments)
+    |> String.trim
     |> String.downcase
     |> String.capitalize
   end
 
-  defp movie_time_string(movie_node) do
-    [{"p", _, [_| tail]}] = 
-      movie_node
-      |> Floki.raw_html
-      |> Floki.find(".cinema_page_showtime")
-    
-    tail
-    |> Enum.reduce([], fn 
-      ({"br", _, _}, acc) -> 
-        acc
+  defp movie_time_string({_, _, [_ | nodes]}) do
+    [{"div", [{"class", "post_text"}], [{"p", _, [_| nodes]}]}] = nodes
 
-      ({"span", _, [{"strong", [], [day_string]}]}, acc) -> 
-        day_string = 
-          day_string
-          |> String.replace("FR-", "FRI-")
-          |> String.replace("FR,", "FRI,")
-          |> String.replace("THUR", "THU")
-          |> String.trim
+    {"span", _, [{"strong", _, [day_range]}]} = Enum.at nodes, 4
+    day_range = 
+      day_range
+      |> String.trim
+      |> String.replace("Thur", "Thu")
 
-        List.insert_at(acc, -1, day_string)
+    time_string = 
+      nodes 
+      |> Enum.at(5) 
+      |> Common.remove_multiple_white_spaces
 
-      ({"strong", _, [time_string]}, acc) -> 
-        day_string = Enum.at(acc, -1)
-         List.replace_at(acc, -1, "#{day_string} #{String.trim(time_string)}")
-    end)
+    "#{day_range} #{time_string}"
   end
 
   defp expand_time_string("Mon: " <> time_string), do: {"Mon", Utils.split_and_trim(time_string, ",")}
@@ -126,50 +113,26 @@ defmodule Moview.Scraper.Silverbird.Impl do
     time_string = String.downcase(time_string)
 
     day_range
-    |> normalize_range
-    |> Enum.map(fn range ->  
-      range
-      |> expand_range
-      |> Enum.map(&(expand_time_string(&1, time_string)))
-      |> List.flatten
-    end)
-    |> List.flatten
+    |> expand_range
+    |> Enum.map(&(expand_time_string(&1, time_string)))
   end
   defp expand_time_string(day, time_string), do: expand_time_string("#{day}: #{time_string}")
 
-  defp normalize_range(range) do
-    range
-    |> Utils.split_and_trim(",")
-    |> Enum.map(fn arg ->  
-      case String.contains?(arg, "-") do
-        true ->
-          arg
-          |> Utils.split_and_trim("-")
-          |> Enum.map(fn x ->  
-            x 
-            |> String.downcase 
-            |> String.capitalize
-          end)
-          |> Enum.join("-")
-
-        false -> 
-          arg
-          |> String.downcase
-          |> String.capitalize
-      end
-    end)
-  end
-
   defp expand_range(str) do
-    case String.contains?(str, "-") do
-      false -> 
+    case String.contains?(str, "to") do
+      false ->
         case String.contains?(str, ",") do
           false -> [str]
           true -> Utils.split_and_trim(str, ",")
         end
       true ->
-        [start, stop] = Utils.split_and_trim(str, "-")
-        Common.expand_range(start, stop, [])
+        [start, stop] =
+          case Utils.split_and_trim(str, "to") do
+            [start, stop] -> [start, stop]
+            [start] -> [start, start]
+          end
+
+        Common.expand_range(start, stop, [])     
     end
   end
 end

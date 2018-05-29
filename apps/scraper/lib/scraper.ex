@@ -1,12 +1,12 @@
 defmodule Moview.Scraper do
   require Logger
-  alias Moview.Movies.{Movie, Schedule}
-  alias Moview.Scraper.{Genesis, Filmhouse}
+  alias Moview.Movies.{Cinema, Movie, Schedule}
+  alias Moview.Scraper.{Genesis, Filmhouse, Ozone, Silverbird}
 
   @callback scrape() :: map
 
   def run do
-    [Genesis, Filmhouse]
+    [Genesis, Filmhouse, Ozone, Silverbird]
     |> Enum.map(fn module ->
       Task.async(fn ->  
         Logger.info "Run scraper for #{inspect module}..."

@@ -1,7 +1,7 @@
 defmodule Moview.Scraper.Filmhouse.Impl do
   require Logger
   alias Moview.Movies.{Movie, Schedule}
-  alias Moview.Scraper.Utils
+  alias Moview.Scraper.{Common, Utils}
 
   def do_scrape(cinemas) do
     cinemas
@@ -9,7 +9,7 @@ defmodule Moview.Scraper.Filmhouse.Impl do
       Logger.info "Beginning to scrape: (#{b}) @ #{a}"
       Task.async(fn  ->  
         scrape(url)
-        |> Enum.map(&create_or_return_movie/1)
+        |> Enum.map(&Common.create_or_return_movie/1)
         |> Enum.filter(fn
           %{movie: nil} -> false
           _ -> true
@@ -17,11 +17,11 @@ defmodule Moview.Scraper.Filmhouse.Impl do
         |> Enum.map(fn %{movie: %{id: movie_id, data: %{title: title}}, times: times} ->
           Logger.debug("Fetching schedules to clear for movie #{title}")
           {:ok, schedules} = Schedule.get_schedules()
-          deletion_candidates = get_schedules_for_deletion(schedules, cinema_id, movie_id)
+          deletion_candidates = Common.get_schedules_for_deletion(schedules, cinema_id, movie_id)
           Logger.debug "Found #{length deletion_candidates} potential schedules to be cleared for #{title}"
 
           Logger.debug("Creating schedules params for movie #{title}")
-          schedule_params = get_schedule_params(times, cinema_id, movie_id) 
+          schedule_params = Common.get_schedule_params(times, cinema_id, movie_id) 
           Logger.debug "Found #{length schedule_params} schedules to be inserted for #{title}"
 
           Logger.debug "Deleting schedules..."
@@ -76,59 +76,6 @@ defmodule Moview.Scraper.Filmhouse.Impl do
     |> String.trim
     |> String.downcase
     |> String.capitalize
-  end
-
-  defp create_or_return_movie(%{title: title} = map) do
-    Logger.debug "Attempt to create movie: #{title}..."
-    {:ok, movies} = Movie.get_movies()
-
-    case Utils.get_movie_details(title) do
-      {:error, _} = res ->
-        Logger.error """
-        #{title} is probably a Nigerian movie.
-        get_movie_details(#{title}) returned #{inspect res}
-        """
-        Map.put(map, :movie, nil)
-      {:ok, %{title: details_title, poster: poster, stars: _} = details} ->
-        Enum.filter(movies, fn
-          %{data: %{title: ^details_title, poster: ^poster}} -> true
-          _ -> false
-        end)
-        |> case do
-          [] ->
-            case Movie.create_movie(details) do
-              {:ok, movie} ->
-                Logger.debug "Created movie: #{details_title}"
-                Map.put(map, :movie, movie)
-              _ = err ->
-                Logger.error "Creating movie with #{inspect details} returned #{err}"
-                Map.put(map, :movie, nil)
-            end
-          [movie|_] ->
-            Logger.debug "Movie exists: #{movie.data.title}"
-            Map.put(map, :movie, movie)
-        end
-    end
-  end
-  defp create_or_return_movie(err) do
-    Logger.error "Could not create movies with #{inspect err}"
-    %{movie: nil}
-  end
-
-  defp get_schedules_for_deletion(schedules, cinema_id, movie_id) do
-    Enum.filter(schedules, fn
-      %{cinema_id: ^cinema_id, movie_id: ^movie_id} -> true
-      _ -> false
-    end)
-  end
-
-  defp get_schedule_params(times, cinema_id, movie_id) do
-    Enum.map(times, fn {day, list} ->
-      Enum.map(list, fn time ->
-        %{time: time, day: Utils.full_day(day), movie_id: movie_id, cinema_id: cinema_id, schedule_type: "2D"}
-      end)
-    end)
-    |> List.flatten
   end
 
   defp movie_time_strings({_, _, [_ | nodes]}) do
@@ -260,11 +207,8 @@ defmodule Moview.Scraper.Filmhouse.Impl do
             [start] -> [start, start]
           end
 
-        expand_range(start, stop, [])     
+        Common.expand_range(start, stop, [])     
     end
-  end
-  defp expand_range(stop, stop, acc), do: acc ++ [stop]
-  defp expand_range(start, stop, []), do: expand_range(Utils.day_after(start), stop, [start])
-  defp expand_range(day, stop, acc), do: expand_range(Utils.day_after(day), stop, acc ++ [day])
+  end  
 end
 
