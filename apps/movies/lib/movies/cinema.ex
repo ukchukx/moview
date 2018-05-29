@@ -45,49 +45,63 @@ defmodule Moview.Movies.Cinema do
         address: "The Palms Shopping Mall, Lekki",
         city: "Lagos",
         branch_title: "The Palms Mall",
-        url: "http://www.genesiscinemas.com/lagos.html"
+        url: "https://www.genesiscinemas.com/locations/palms-mall-lekki-lagos/"
       },
       %{
         name: "Genesis Cinemas",
         address: "Ceddi Plaza, 264 Tafawa Balewa Way",
         city: "Abuja",
         branch_title: "Ceddi Plaza",
-        url: "http://www.genesiscinemas.com/abuja.html"
+        url: "https://www.genesiscinemas.com/ceddi-plaza-abuja/"
+      },
+      %{
+        name: "Genesis Cinemas",
+        address: "Gateway Mall, Airport road, Lugbe",
+        city: "Abuja",
+        branch_title: "Gateway Mall",
+        url: "https://www.genesiscinemas.com/locations/gateway-mall-abuja/"
       },
       %{
         name: "Genesis Cinemas",
         address: "Delta Mall, Effurun",
         city: "Effurun",
         branch_title: "Delta Mall",
-        url: "http://www.genesiscinemas.com/deltamall.html"
+        url: "https://www.genesiscinemas.com/warri-delta-mall-effurun/"
+      },
+      %{
+        name: "Genesis Cinemas",
+        address: "Asaba Mall, Asaba",
+        city: "Asaba",
+        branch_title: "Delta Mall",
+        url: "https://www.genesiscinemas.com/asaba-mall-delta-state/"
       },
       %{
         name: "Genesis Cinemas",
         address: "Maryland Mall, Ikorodu Road",
         city: "Lagos",
         branch_title: "Maryland Mall",
-        url: "http://www.genesiscinemas.com/maryland.html"
+        url: "https://www.genesiscinemas.com/maryland-mall-lagos/"
       },
       %{
         name: "Genesis Cinemas",
         address: "Genesis Center, 39 Tombia Street, GRA Phase 2",
         city: "Port Harcourt",
         branch_title: "Genesis Center",
-        url: "http://www.genesiscinemas.com/portharcourt.html"
+        url: "https://www.genesiscinemas.com/genesis-center-port-harcourt/"
       },
       %{
         name: "Genesis Cinemas",
         address: "3 Egbu Road",
         city: "Owerri",
         branch_title: "Owerri Mall",
-        url: "http://www.genesiscinemas.com/owerri.html"
+        url: "https://www.genesiscinemas.com/owerri-mall-owerri/"
       },
       %{
         name: "Genesis Cinemas",
         address: "Novare Mall, Sangotedo, Ajah",
         city: "Lagos",
         branch_title: "Novare Mall",
-        url: "http://www.genesiscinemas.com/novaremall.html"
+        url: "https://www.genesiscinemas.com/novare-lekki-mall-sangotedo-lagos"
       },
       %{
         name: "Silverbird Cinemas",
