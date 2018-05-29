@@ -94,42 +94,42 @@ defmodule Moview.Movies.Cinema do
         address: "Ibom Tropicana Entertainment Centre",
         city: "Uyo",
         branch_title: "Ibom Tropicana Entertainment Centre",
-        url: "http://silverbirdcinemas.com/uyo/"
+        url: "https://silverbirdcinemas.com/cinema/uyo/"
       },
       %{
         name: "Silverbird Cinemas",
         address: "Jabi Lake Mall",
         city: "Abuja",
         branch_title: "Jabi Lake Mall",
-        url: "http://silverbirdcinemas.com/jabi/"
+        url: "https://silverbirdcinemas.com/cinema/jabi/"
       },
       %{
         name: "Silverbird Cinemas",
         address: "Plot 1161, Memorial Drive, By Musa Yar'adua Center, Central Business District",
         city: "Abuja",
         branch_title: "Silverbird Entertainment Center",
-        url: "http://silverbirdcinemas.com/secabuja/"
+        url: "https://silverbirdcinemas.com/cinema/sec-abuja/"
       },
       %{
         name: "Silverbird Cinemas",
         address: "Festival Mall (Golden Tulip Hotel Compound), Amuwo Odofin",
         city: "Lagos",
         branch_title: "Festac",
-        url: "http://silverbirdcinemas.com/festac/"
+        url: "https://silverbirdcinemas.com/cinema/festac/"
       },
       %{
         name: "Silverbird Cinemas",
         address: "Ikeja City Mall, 174 / 194, Obafemi Awolowo way, Alausa, Ikeja",
         city: "Lagos",
         branch_title: "Ikeja",
-        url: "http://silverbirdcinemas.com/ikeja/"
+        url: "https://silverbirdcinemas.com/cinema/ikeja/"
       },
       %{
         name: "Silverbird Cinemas",
         address: "133, Ahmadu Bello Way, Victoria Island",
         city: "Lagos",
         branch_title: "Galleria - V.I",
-        url: "http://silverbirdcinemas.com/galleria/"
+        url: "https://silverbirdcinemas.com/cinema/galleria/"
       },
       %{
         name: "Filmhouse Cinemas",
@@ -179,6 +179,13 @@ defmodule Moview.Movies.Cinema do
         city: "Akure",
         branch_title: "",
         url: "http://filmhouseng.com/akure.html"
+      },
+      %{
+        name: "Ozone Cinemas",
+        address: "E-Centre 1-11 Commercial avenue, Yaba",
+        city: "Lagos",
+        branch_title: "",
+        url: "https://www.ozonecinemas.com/now_showing.php"
       }
     ]
     |> Enum.map(&create_cinema/1)
