@@ -16,7 +16,7 @@ blocks:
       jobs:
         - name: mix and cache
           commands:
-            - sudo apt-get update && sudo apt-get install -y libpq-dev
+            - sudo apt-get update && sudo apt-get install -y software-properties-common postgresql postgresql-contrib
             - checkout
             # Be sure to use --force to skip confirmation prompts
             - mix local.hex --force
@@ -44,3 +44,12 @@ blocks:
           commands:
             - mix test
 
+promotions:
+  - name: Deploy to staging
+    pipeline_file: staging-deploy.yml
+    auto_promote_on:
+      - result: passed
+        branch:
+          - develop
+  - name: Deploy to production
+    pipeline_file: production-deploy.yml
