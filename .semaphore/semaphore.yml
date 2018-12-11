@@ -13,10 +13,6 @@ blocks:
       env_vars:
         - name: MIX_ENV
           value: test
-        - name: DB_USER
-          value: $DATABASE_POSTGRESQL_USERNAME
-        - name: DB_PASS
-          value: $DATABASE_POSTGRESQL_PASSWORD
       jobs:
         - name: mix and cache
           commands:
@@ -37,14 +33,9 @@ blocks:
       env_vars:
         - name: MIX_ENV
           value: test
-        - name: DB_USER
-          value: $DATABASE_POSTGRESQL_USERNAME
-        - name: DB_PASS
-          value: $DATABASE_POSTGRESQL_PASSWORD
       prologue:
         commands:
           - echo $DB_USER
-          - echo $DATABASE_POSTGRESQL_USERNAME
           - checkout
           # Restore dependencies and compiled code
           - cache restore mix-deps-$SEMAPHORE_GIT_BRANCH-$(checksum mix.lock),mix-deps-$SEMAPHORE_GIT_BRANCH,mix-deps-master
