@@ -43,6 +43,8 @@ blocks:
           value: $DATABASE_POSTGRESQL_PASSWORD
       prologue:
         commands:
+          - echo $DB_USER
+          - echo $DATABASE_POSTGRESQL_USERNAME
           - checkout
           # Restore dependencies and compiled code
           - cache restore mix-deps-$SEMAPHORE_GIT_BRANCH-$(checksum mix.lock),mix-deps-$SEMAPHORE_GIT_BRANCH,mix-deps-master
