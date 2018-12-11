@@ -16,7 +16,7 @@ blocks:
       jobs:
         - name: mix and cache
           commands:
-            - sudo apt-get update && sudo apt-get install -y software-properties-common postgresql postgresql-contrib
+            - sudo apt-get update && sudo apt-get install -y libpq-dev
             - checkout
             # Be sure to use --force to skip confirmation prompts
             - mix local.hex --force
