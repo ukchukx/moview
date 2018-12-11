@@ -13,6 +13,10 @@ blocks:
       env_vars:
         - name: MIX_ENV
           value: test
+        - name: DB_USER
+          value: $DATABASE_POSTGRESQL_USERNAME
+        - name: DB_PASS
+          value: $DATABASE_POSTGRESQL_PASSWORD
       jobs:
         - name: mix and cache
           commands:
@@ -33,6 +37,10 @@ blocks:
       env_vars:
         - name: MIX_ENV
           value: test
+        - name: DB_USER
+          value: $DATABASE_POSTGRESQL_USERNAME
+        - name: DB_PASS
+          value: $DATABASE_POSTGRESQL_PASSWORD
       prologue:
         commands:
           - checkout
