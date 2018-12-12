@@ -59,19 +59,22 @@ WORKDIR /tmp
 
 # See : https://github.com/phusion/baseimage-docker/issues/58
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
-    apt-get -qq update
+    apt-get -qq update && \
+    apt-get install -y sudo wget git curl inotify-tools build-essential zip unzip
 
 
-RUN apt-get install -y sudo wget git curl inotify-tools build-essential zip unzip \
-    && curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash - \
-    && wget http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb \
-    && dpkg -i erlang-solutions_1.0_all.deb \
+RUN curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash - \
     && apt-get -qq update \
     && apt-get install -y \
-    esl-erlang=1:21.2 \
     tzdata \
-    nodejs \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    nodejs
+
+# Install Erlang
+RUN echo "deb http://packages.erlang-solutions.com/ubuntu $(lsb_release -sc) contrib" >> /etc/apt/sources.list && \
+    wget -q http://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | sudo apt-key add - && \
+    #apt-key adv --fetch-keys http://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc && \
+    apt-get -qq update && apt-get install -y esl-erlang=1:21.2 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Download and Install Elixir
 WORKDIR /elixir
