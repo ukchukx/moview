@@ -59,14 +59,14 @@ WORKDIR /tmp
 
 # See : https://github.com/phusion/baseimage-docker/issues/58
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
-    apt-get update
+    apt-get -qq update
 
 
 RUN apt-get install -y sudo wget git curl inotify-tools build-essential zip unzip \
     && curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash - \
     && wget http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb \
     && dpkg -i erlang-solutions_1.0_all.deb \
-    && apt-get update \
+    && apt-get -qq update \
     && apt-get install -y \
     esl-erlang=1:21.2 \
     tzdata \
