@@ -17,14 +17,14 @@
 #  docker run --rm -t -i phusion/baseimage:<VERSION> /sbin/my_init -- bash -l
 #
 # Thanks to @hqmq_ for the heads up
-FROM phusion/baseimage:0.9.22
+FROM phusion/baseimage:0.11
 MAINTAINER Nizar Venturini @trenpixster
 
 # Important!  Update this no-op ENV variable when this Dockerfile
 # is updated with the current date. It will force refresh of all
 # of the base images and things like `apt-get update` won't be using
 # old cached versions when the Dockerfile is built.
-ENV REFRESHED_AT 2017-08-05
+ENV REFRESHED_AT 2018-12-20
 
 # Set correct environment variables.
 
@@ -58,31 +58,31 @@ ENV LC_ALL en_US.UTF-8
 WORKDIR /tmp
 
 # See : https://github.com/phusion/baseimage-docker/issues/58
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
+    apt-get update
 
-RUN echo "deb http://packages.erlang-solutions.com/ubuntu trusty contrib" >> /etc/apt/sources.list && \
-    apt-key adv --fetch-keys http://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc && \
-    apt-get -qq update && apt-get install -y \
-    esl-erlang=1:20.0 \
-    git \
-    unzip \
-    build-essential \
+
+RUN apt-get install -y wget git curl inotify-tools build-essential zip unzip \
+    && curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash - \
+    && wget http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb \
+    && dpkg -i erlang-solutions_1.0_all.deb \
+    && apt-get update \
+    && apt-get install -y \
+    esl-erlang=1:21.2 \
     tzdata \
-    wget && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Download and Install Specific Version of Elixir
+# Download and Install Elixir
 WORKDIR /elixir
-RUN wget -q https://github.com/elixir-lang/elixir/releases/download/v1.5.1/Precompiled.zip && \
+RUN wget -q https://github.com/elixir-lang/elixir/releases/download/v1.6.3/Precompiled.zip && \
     unzip Precompiled.zip && \
     rm -f Precompiled.zip && \
     ln -s /elixir/bin/elixirc /usr/local/bin/elixirc && \
     ln -s /elixir/bin/elixir /usr/local/bin/elixir && \
     ln -s /elixir/bin/mix /usr/local/bin/mix && \
-    ln -s /elixir/bin/iex /usr/local/bin/iex
-
-# Install local Elixir hex and rebar
-RUN /usr/local/bin/mix local.hex --force && \
+    ln -s /elixir/bin/iex /usr/local/bin/iex && \
+    /usr/local/bin/mix local.hex --force && \
     /usr/local/bin/mix local.rebar --force
 
 WORKDIR /
