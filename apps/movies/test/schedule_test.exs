@@ -20,6 +20,9 @@ defmodule Moview.ScheduleTest do
     {:ok, movie} =
       %{title: "Action film",
         runtime: 90,
+        release_date: 1234567890,
+        poster: "action-film.jpg",
+        trailer: "https://youtube.com/watch?v=action-film",
         rating: rating,
         stars: ["Actor A", "Actor B"],
         genres: [genre]} |> MovieAPI.create_movie

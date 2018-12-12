@@ -35,7 +35,6 @@ blocks:
           value: test
       prologue:
         commands:
-          - echo $DB_USER
           - checkout
           # Restore dependencies and compiled code
           - cache restore mix-deps-$SEMAPHORE_GIT_BRANCH-$(checksum mix.lock),mix-deps-$SEMAPHORE_GIT_BRANCH,mix-deps-master

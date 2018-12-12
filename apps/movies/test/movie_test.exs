@@ -12,16 +12,21 @@ defmodule Moview.MovieTest do
     {:ok, %{data: %{name: rating1}}} = API.create_rating(%{name: "PG"})
     {:ok, %{data: %{name: rating2}}} = API.create_rating(%{name: "R"})
 
-    {:ok, movie} =
-      %{title: "Action film",
-        runtime: 90,
-        rating: rating1,
-        stars: ["Actor A", "Actor B"],
-        genres: ["Action", "Thriller"]} |> API.create_movie
+    movie_params = %{title: "Action film",
+              runtime: 90,
+              release_date: 1234567890,
+              poster: "action-film.jpg",
+              trailer: "https://youtube.com/watch?v=action-film",
+              rating: rating1,
+              stars: ["Actor A", "Actor B"],
+              genres: ["Action", "Thriller"]}
 
+    {:ok, movie} = API.create_movie(movie_params)
+
+    movie_params = Map.merge(movie_params, %{runtime: 60, genres: ["Action", "Thriller"],
+            rating: rating2, title: "Another action film", stars: ["Actor A", "Actor C"]})
     {:ok,
-      movie_params: %{runtime: 60, genres: ["Action", "Thriller"],
-        rating: rating2, title: "Another action film", stars: ["Actor A", "Actor C"]},
+      movie_params: movie_params,
       movie: movie,
       genres: [genre1, genre2]}
   end
@@ -33,8 +38,8 @@ defmodule Moview.MovieTest do
     assert id
   end
 
-  test "movie exists", %{movie: %{data: %{title: title, stars: stars}}} do
-    assert true == API.movie_exists?(%{title: title, stars: stars})
+  test "movie exists", %{movie: %{data: data}} do
+    assert true == API.movie_exists?(data)
   end
 
   test "update movie", %{movie: %{id: id, data: %{slug: old_slug}}, movie_params: %{title: ptitle, stars: stars} = params} do
