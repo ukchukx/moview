@@ -59,7 +59,35 @@ WORKDIR /tmp
 
 # See : https://github.com/phusion/baseimage-docker/issues/58
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
+    apt-get -qq update && \
+    apt-get install -y sudo wget git curl inotify-tools build-essential zip unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
+RUN curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash - \
+    && apt-get -qq update \
+    && apt-get install -y \
+    tzdata \
+    nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install Erlang
+RUN echo "deb http://packages.erlang-solutions.com/ubuntu $(lsb_release -sc) contrib" >> /etc/apt/sources.list && \
+    wget -qO - http://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | sudo apt-key add - && \
+    apt-get -qq update && apt-get install -y esl-erlang=1:21.2-1 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Download and Install Elixir
+WORKDIR /elixir
+RUN wget -q https://github.com/elixir-lang/elixir/releases/download/v1.6.3/Precompiled.zip && \
+    unzip Precompiled.zip && \
+    rm -f Precompiled.zip && \
+    ln -s /elixir/bin/elixirc /usr/local/bin/elixirc && \
+    ln -s /elixir/bin/elixir /usr/local/bin/elixir && \
+    ln -s /elixir/bin/mix /usr/local/bin/mix && \
+    ln -s /elixir/bin/iex /usr/local/bin/iex && \
+    /usr/local/bin/mix local.hex --force && \
+    /usr/local/bin/mix local.rebar --force
 
 WORKDIR /
 
