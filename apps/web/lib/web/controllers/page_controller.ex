@@ -10,17 +10,17 @@ defmodule Moview.Web.PageController do
   end
 
   def catch_all(conn, _) do
-    redirect(conn, to: page_path(conn, :movies))
+    redirect(conn, to: Routes.page_path(conn, :movies))
   end
 
   def movie(conn, %{"slug" => slug} = _) do
     case Movie.get_movie_by_slug(slug) do
       {:error, _} ->
-        redirect(conn, to: page_path(conn, :movies))
+        redirect(conn, to: Routes.page_path(conn, :movies))
       {:ok, %{rating_id: rating_id} =  movie} ->
         {:ok, %{data: %{name: rating}}} = Movie.get_rating(rating_id)
-        path = page_path(conn, :movie, slug)
-        url = page_url(conn, :movie, slug)
+        path = Routes.page_path(conn, :movie, slug)
+        url = Routes.page_url(conn, :movie, slug)
         site_url = String.replace_suffix(url, path, "")
 
         movie =

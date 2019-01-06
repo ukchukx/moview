@@ -14,8 +14,8 @@ defmodule Moview.Web.LayoutView do
     }
   end
 
-  def home_link(conn), do: page_path(conn, :movies)
-  def cinemas_link(conn), do: page_path(conn, :cinemas)
+  def home_link(conn), do: Routes.page_path(conn, :movies)
+  def cinemas_link(conn), do: Routes.page_path(conn, :cinemas)
 
   @doc """
     Generates name for the JavaScript view we want to use

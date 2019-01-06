@@ -35,6 +35,14 @@ defmodule Moview.Movies.Cinema do
     Impl.get_cinemas()
   end
 
+  def cinema_name(%{data: %{name: name, branch_title: branch, city: city}}) do
+    case branch do
+      "" -> "#{name}, #{city}"
+      _ -> "#{name} (#{branch}), #{city}"
+    end
+  end
+  def cinema_name(_), do: ""
+
 
   def seed do
     Logger.info("Seeding cinemas")

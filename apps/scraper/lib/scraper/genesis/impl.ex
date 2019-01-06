@@ -10,7 +10,7 @@ defmodule Moview.Scraper.Genesis.Impl do
     cinemas
     |> Enum.map(fn %{data: %{url: url, address: a, branch_title: b}, id: cinema_id} ->
       Logger.info "Beginning to scrape: (#{b}) @ #{a}"
-      Task.async(fn ->  
+      Task.async(fn ->
         scrape(url)
         |> Enum.map(&Common.create_or_return_movie/1)
         |> Enum.filter(fn
@@ -67,11 +67,11 @@ defmodule Moview.Scraper.Genesis.Impl do
         times =
           movie_node
           |> movie_time_strings
-          |> Enum.map(&expand_time_string/1)
+          |> Enum.map(&Common.expand_time_string/1)
           |> List.flatten
 
         %{title: title, times: times}
-      _ -> 
+      _ ->
         Logger.warn "Could not extract_info_from_node"
         nil
     end
@@ -111,46 +111,5 @@ defmodule Moview.Scraper.Genesis.Impl do
     end)
   end
 
-  defp expand_time_string("Daily: "<> time_string) do
-    Logger.debug "Expanding (daily) time string: #{time_string}"
-    @weekdays |> Enum.map(&(expand_time_string(&1, String.trim(time_string))))
-  end
-  defp expand_time_string("Mon: " <> time_string), do: {"Mon", Utils.split_and_trim(time_string, " ")}
-  defp expand_time_string("Tue: " <> time_string), do: {"Tue", Utils.split_and_trim(time_string, " ")}
-  defp expand_time_string("Wed: " <> time_string), do: {"Wed", Utils.split_and_trim(time_string, " ")}
-  defp expand_time_string("Thu: " <> time_string), do: {"Thu", Utils.split_and_trim(time_string, " ")}
-  defp expand_time_string("Fri: " <> time_string), do: {"Fri", Utils.split_and_trim(time_string, " ")}
-  defp expand_time_string("Sat: " <> time_string), do: {"Sat", Utils.split_and_trim(time_string, " ")}
-  defp expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, " ")}
-  defp expand_time_string("Daily " <> str), do:  expand_time_string("Daily: #{String.trim(str)}")
-  defp expand_time_string(str) when is_binary(str) do
-    Logger.debug "Expanding time string: #{str}"
-    [day_range, time_string] = Utils.split_and_trim(str, ":", [parts: 2])
-    [day_range, time_string] =
-      case day_range do
-        "Daily  12" -> ["Daily", "12:00pm " <> time_string]
-        _ -> [day_range, time_string]
-      end
-
-    Utils.split_and_trim(day_range, ",")
-    |> Enum.map(fn dr -> Utils.split_and_trim(dr, "&") |> Enum.map(&expand_range/1) end)
-    |> List.flatten
-    |> Enum.map(&(expand_time_string(&1, time_string)))
-  end
-  defp expand_time_string(day, time_string), do: expand_time_string("#{day}: #{time_string}")
-
-  defp expand_range("Daily  12"), do: expand_time_string("Daily: 12:00pm")
-  defp expand_range(str) do
-    case String.contains?(str, "-") do
-      false ->
-        case String.contains?(str, ",") do
-          false -> [str]
-          true -> Utils.split_and_trim(str, ",")
-        end
-      true ->
-        [start, stop] = Utils.split_and_trim(str, "-")
-        Common.expand_range(start, stop, [])
-    end
-  end
 end
 

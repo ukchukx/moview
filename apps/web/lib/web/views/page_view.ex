@@ -48,6 +48,6 @@ defmodule Moview.Web.PageView do
   def movie_url(_, %{data: %{slug: nil}}), do: "#"
   def movie_url(_, %{data: %{slug: ""}}), do: "#"
   def movie_url(conn, %{data: %{slug: slug}}) do
-    page_path(conn, :movie, slug)
+    Routes.page_path(conn, :movie, slug)
   end
 end

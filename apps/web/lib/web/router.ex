@@ -19,6 +19,13 @@ defmodule Moview.Web.Router do
     get "/", PageController, :movies
     get "/m/:slug", PageController, :movie
     get "/cinemas", PageController, :cinemas
+    get "/a/movies", AdminController, :movies
+    post "/a/create-movie", AdminController, :create_movie
+    post "/a/add-movie", AdminController, :add_movie
+    post "/a/delete-movie/:movie_id", AdminController, :delete_movie
+    post "/a/add-schedule", AdminController, :add_schedule
+    post "/a/delete-schedule/:schedule_id", AdminController, :delete_schedule
+    post "/a/clear-schedules/:movie_id", AdminController, :clear_schedules
     get "/*path", PageController, :catch_all
   end
 

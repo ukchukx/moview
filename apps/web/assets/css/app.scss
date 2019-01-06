@@ -1,12 +1,10 @@
 /* This file is for your main application css. */
-$fa-font-path: "../fonts";
-@import "font-awesome";
 
 $purple: #683bb7;
-$brand-primary: $purple; 
-$font-family-sans-serif: Lato, "Helvetica Neue", Helvetica, sans-serif; 
+$brand-primary: $purple;
+$font-family-sans-serif: Lato, "Helvetica Neue", Helvetica, sans-serif;
 $font-family-base: $font-family-sans-serif;
 
-@import "bootstrap";
+@import "~bootstrap/scss/bootstrap";
 @import "custom";
 

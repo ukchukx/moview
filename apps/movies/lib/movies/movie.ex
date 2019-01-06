@@ -51,8 +51,15 @@ defmodule Moview.Movies.Movie do
     Impl.get_movies()
   end
 
-  def delete_movie(movie) do
+  def delete_movie(%{} = movie) do
     Impl.delete_movie(movie)
+  end
+
+  def delete_movie(movie_id) do
+    case get_movie(movie_id) do
+      {:ok, movie} -> Impl.delete_movie(movie)
+      err -> err
+    end
   end
 
   def delete_movies do
