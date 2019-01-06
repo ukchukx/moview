@@ -6,6 +6,10 @@ defmodule Moview.Web.PageController do
 
   def movies(conn, _) do
     {:ok, movies} = Movie.get_movies()
+    movies = Enum.map(movies, fn %{id: id} = movie ->
+      {:ok, schedules} = Cache.get_schedules(id)
+      Map.put(movie, :schedules, schedules)
+    end)
     render conn, "movies.html", movies: movies
   end
 
