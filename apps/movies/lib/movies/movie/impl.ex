@@ -136,7 +136,7 @@ defmodule Moview.Movies.Movie.Impl do
             GenServer.cast(@service_name, {:save_movie, movie})
             {:ok, movie}
         end
-      {:ok, rating} -> {:ok, rating}
+      {:ok, movie} -> {:ok, movie}
     end
   end
 
@@ -155,7 +155,7 @@ defmodule Moview.Movies.Movie.Impl do
       end
       # Sort on release_date
       |> Enum.sort(fn %{data: %{release_date: i1}}, %{data: %{release_date: i2}} -> i1 >= i2 end)
-      
+
     {:ok, movies}
   end
 

@@ -6,6 +6,10 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
+
+# 5 minutes
+config :web, schedule_interval: 300
+
 config :web, Moview.Web.Endpoint,
   http: [port: 4000],
   debug_errors: true,
