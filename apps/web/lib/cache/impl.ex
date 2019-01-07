@@ -155,7 +155,7 @@ defmodule Moview.Web.Cache.Impl do
     defp time_string_to_tuple(time, [add: hrs]) do
       [hours, minutes] =
         time
-        |> String.split(":")
+        |> String.split(":", [trim: true])
         |> Enum.map(&(&1 |> String.replace(~r/\D/, "") |> String.to_integer))
 
       case hours == 12 do
