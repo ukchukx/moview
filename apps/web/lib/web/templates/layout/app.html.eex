@@ -7,7 +7,7 @@
     <meta name="author" content="Uk">
     <%= render_existing(@view_module, "meta." <> @view_template, assigns) ||
       render(Moview.Web.LayoutView, "meta.html", assigns) %>
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>">
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-68883437-1"></script>
     <script>
@@ -35,6 +35,6 @@
       </main>
 
     </div> <!-- /container -->
-    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+    <script src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>

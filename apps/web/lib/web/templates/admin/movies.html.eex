@@ -1,0 +1,125 @@
+<div class="container">
+    <div class="row justify-content-center align-items-center mt-4">
+      <div class="col-md-12">
+        <div class="card card-default">
+          <div class="card-body">
+            <%= form_for @conn, Routes.admin_path(@conn, :create_movie), [as: "form", class: "form-inline"], fn _ -> %>
+              <div class="input-group mb-3">
+                <input type="text" class="form-control" name="title" placeholder="Movie title">
+                <div class="input-group-append">
+                  <button type="submit" class="btn btn-primary pointer">Quick create</button>
+                </div>
+              </div>
+            <% end %>
+            <a class="btn btn-secondary mb-3" href="javascript:;" data-toggle="modal" data-target="#modal-new-movie">&plus; Add movie</a>
+            <%= if Enum.count(@movies) > 0 do %>
+            <ul class="list-group">
+              <%= for movie <- @movies do %>
+              <li class="list-group-item pointer">
+                <div class="row">
+                  <div class="col align-self-center">
+                    <img width="100px" height="100px" class="img-responsive" src="<%= movie.data.poster %>">
+                  </div>
+                  <div class="col align-self-center">
+                    <p class="h5 one-line"><%= movie.data.title %></p>
+                  </div>
+                  <div class="col align-self-center">
+                    <div class="btn-group">
+                      <a class="btn btn-secondary btn-sm" href="javascript:;" data-toggle="modal" data-target="#modal-add-<%= movie.id %>">&plus; Add schedules</a>
+                      <a class="btn btn-secondary btn-sm" href="javascript:;" data-toggle="modal" data-target="#modal-<%= movie.id %>">&minus; Delete schedules</a>
+                      <%= link "Delete", to: Routes.admin_path(@conn, :delete_movie, movie.id), method: :post, data: [confirm: "Are you sure?"], class: "btn btn-secondary btn-sm" %>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal fade" id="modal-add-<%= movie.id %>" tabindex="-1" role="dialog" aria-labelledby="modal-<%= movie.id %>" aria-hidden="true">
+                  <div class="modal-dialog modal-lg" role="document">
+                    <%= form_for @conn, Routes.admin_path(@conn, :add_schedule), [as: "form", class: "form"], fn _ -> %>
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="modal-<%= movie.id %>-label">Add schedules for <%= movie.data.title %></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="card card-default">
+                          <div class="card-body">
+                            <input type="hidden" name="movie_id" value="<%= movie.id %>">
+                            <select class="form-control" name="cinema_id">
+                              <%= for cinema <- @cinemas do %>
+                              <option value="<%= cinema.id %>"><%= cinema_name(cinema) %></option>
+                              <% end %>
+                            </select>
+                            <select class="form-control mt-3" name="type">
+                              <option value="2D">2D</option>
+                              <option value="3D">3D</option>
+                            </select>
+                            <input type="text" class="form-control mt-3" name="time_string" placeholder="Time string">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="submit" class="btn btn-secondary">Add</button>
+                      </div>
+                    </div>
+                    <% end %>
+                  </div>
+                </div>
+                <div class="modal fade" id="modal-<%= movie.id %>" tabindex="-1" role="dialog" aria-labelledby="modal-<%= movie.id %>" aria-hidden="true">
+                  <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="modal-<%= movie.id %>-label"><%= movie.data.title %></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="card card-default">
+                          <div class="card-body">
+                          <%= if Enum.count(movie.schedules) > 0 do %>
+                            <ul class="list-group">
+                              <%= link "- Clear schedules", to: Routes.admin_path(@conn, :clear_schedules, movie.id), method: :post, data: [confirm: "Are you sure?"], class: "btn btn-secondary btn-sm mb-3" %>
+                              <%= for schedule <- movie.schedules do %>
+                              <li class="list-group-item">
+                                <div class="schedule-item" data-sched-day="<%= schedule.day %>" data-sched-ts="<%= schedule.ts %>" data-sched-id="<%= schedule.id %>" >
+                                  <h5 class="card-title"><%= schedule.cinema %></h5>
+                                  <h6 class="card-subtitle mb-2 text-muted"><%= schedule.day %></h6>
+                                  <p class="card-text">
+                                    <span><%= schedule.time %></span>
+                                    <%= link "Delete", to: Routes.admin_path(@conn, :delete_schedule, schedule.id), method: :post, data: [confirm: "Are you sure?"], class: "btn btn-secondary btn-sm" %>
+                                  </p>
+                                </div>
+                              </li>
+                              <% end %>
+                            </ul>
+                          <% else %>
+                            <div class="col text-center">
+                              <h1 class="font-weight-bold text-muted empty-text">No schedule</h1>
+                            </div>
+                          <% end %>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <% end %>
+            </ul>
+            <% else %>
+            <div class="row mt-5">
+              <div class="col text-center">
+                <h1 class="font-weight-bold text-muted empty-text">No movies</h1>
+              </div>
+            </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+

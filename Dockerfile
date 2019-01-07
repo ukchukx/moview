@@ -42,7 +42,7 @@ RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 # Baseimage-docker enables an SSH server by default, so that you can use SSH
 # to administer your container. In case you do not want to enable SSH, here's
 # how you can disable it. Uncomment the following:
-#RUN rm -rf /etc/service/sshd /etc/my_init.d/00_regen_ssh_host_keys.sh
+RUN rm -rf /etc/service/sshd /etc/my_init.d/00_regen_ssh_host_keys.sh
 
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
@@ -58,8 +58,21 @@ ENV LC_ALL en_US.UTF-8
 WORKDIR /tmp
 
 # See : https://github.com/phusion/baseimage-docker/issues/58
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+RUN apt-get -qq update
+
+RUN apt-get install -y sudo wget git tzdata curl inotify-tools build-essential zip unzip && \
+    echo "deb http://packages.erlang-solutions.com/ubuntu $(lsb_release -sc) contrib" >> /etc/apt/sources.list && \
+    wget -qO - http://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | sudo apt-key add - && \
+    curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash - && \
+    apt-get update
+
+# Install Erlang
+RUN apt-get install -y esl-erlang=1:21.2-1
+
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    mkdir -p /app/logs
 
 WORKDIR /
 
@@ -67,9 +80,8 @@ WORKDIR /
 ENV MIX_HOST 1976
 ENV TZ Africa/Lagos
 
-RUN mkdir -p /app/logs
 WORKDIR /app
-COPY ./_build/prod/rel/moview/releases/1.2.0/moview.tar.gz /app/moview.tar.gz
+COPY ./_build/prod/rel/moview/releases/1.2.0/moview.tar.gz .
 RUN tar -zxvf moview.tar.gz && rm -f moview.tar.gz
 
 

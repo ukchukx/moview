@@ -21,7 +21,7 @@ defmodule Moview.Web do
     quote do
       use Phoenix.Controller, namespace: Moview.Web
       import Plug.Conn
-      import Moview.Web.Router.Helpers
+      alias Moview.Web.Router.Helpers, as: Routes
       import Moview.Web.Gettext
     end
   end
@@ -37,7 +37,7 @@ defmodule Moview.Web do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import Moview.Web.Router.Helpers
+      alias Moview.Web.Router.Helpers, as: Routes
       import Moview.Web.ErrorHelpers
       import Moview.Web.Gettext
     end

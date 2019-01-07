@@ -7,7 +7,7 @@ defmodule Moview.Scraper.Filmhouse.Impl do
     cinemas
     |> Enum.map(fn %{data: %{url: url, address: a, branch_title: b}, id: cinema_id} ->
       Logger.info "Beginning to scrape: (#{b}) @ #{a}"
-      Task.async(fn  ->  
+      Task.async(fn  ->
         scrape(url)
         |> Enum.map(&Common.create_or_return_movie/1)
         |> Enum.filter(fn
@@ -21,7 +21,7 @@ defmodule Moview.Scraper.Filmhouse.Impl do
           Logger.debug "Found #{length deletion_candidates} potential schedules to be cleared for #{title}"
 
           Logger.debug("Creating schedules params for movie #{title}")
-          schedule_params = Common.get_schedule_params(times, cinema_id, movie_id) 
+          schedule_params = Common.get_schedule_params(times, cinema_id, movie_id)
           Logger.debug "Found #{length schedule_params} schedules to be inserted for #{title}"
 
           Logger.debug "Deleting schedules..."
@@ -62,7 +62,7 @@ defmodule Moview.Scraper.Filmhouse.Impl do
     times =
       movie_node
       |> movie_time_strings
-      |> Enum.map(&expand_time_string/1)
+      |> Enum.map(&Common.expand_time_string/1)
       |> List.flatten
 
     %{title: title, times: times}
@@ -169,46 +169,5 @@ defmodule Moview.Scraper.Filmhouse.Impl do
     end)
   end
 
-  defp expand_time_string("Mon: " <> time_string), do: {"Mon", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Tue: " <> time_string), do: {"Tue", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Wed: " <> time_string), do: {"Wed", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Thu: " <> time_string), do: {"Thu", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Fri: " <> time_string), do: {"Fri", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Sat: " <> time_string), do: {"Sat", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string(str) when is_binary(str) do
-    Logger.debug "Expanding time string: #{str}"
-    str =
-      case str do
-        <<range::binary-size(10)>> <> " " <> rest -> "#{range}: #{String.trim(rest)}"
-        _ -> str
-      end
-
-    [day_range, time_string] = Utils.split_and_trim(str, ":", [parts: 2])
-    time_string = String.downcase(time_string)
-
-    day_range
-    |> expand_range
-    |> Enum.map(&(expand_time_string(&1, time_string)))
-  end
-  defp expand_time_string(day, time_string), do: expand_time_string("#{day}: #{time_string}")
-
-  defp expand_range(str) do
-    case String.contains?(str, "to") do
-      false ->
-        case String.contains?(str, ",") do
-          false -> [str]
-          true -> Utils.split_and_trim(str, ",")
-        end
-      true ->
-        [start, stop] =
-          case Utils.split_and_trim(str, "to") do
-            [start, stop] -> [start, stop]
-            [start] -> [start, start]
-          end
-
-        Common.expand_range(start, stop, [])     
-    end
-  end  
 end
 

@@ -9,8 +9,12 @@ defmodule Moview.Movies.BaseSchema do
     end
   end
 
-  def new_id(%Ecto.Changeset{valid?: true} = changeset, resource_type) do
-    Ecto.Changeset.put_change(changeset, :id, Ruid.generate(resource_type))
+  def new_id(%Ecto.Changeset{valid?: true, changes: changes} = changeset, resource_type) do
+    case Map.has_key?(changes, :id) do
+      true -> changeset
+      false ->
+        Ecto.Changeset.put_change(changeset, :id, Ruid.generate(resource_type))
+    end
   end
   def new_id(%Ecto.Changeset{} = changeset, _), do: changeset
 

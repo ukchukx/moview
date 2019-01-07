@@ -3,6 +3,8 @@ defmodule Moview.Scraper.Common do
   alias Moview.Movies.{Cinema, Movie}
   alias Moview.Scraper.Utils
 
+  @weekdays  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
   def generic_scrape_fun(name, module) do
     Logger.info "Begin scraping #{name}"
     {:ok, cinemas} = Cinema.get_cinemas_by_name(name)
@@ -51,7 +53,7 @@ defmodule Moview.Scraper.Common do
         end
     end
   end
-  
+
   def create_or_return_movie(err) do
     Logger.error "Could not create movies with #{inspect err}"
     %{movie: nil}
@@ -64,10 +66,10 @@ defmodule Moview.Scraper.Common do
     end)
   end
 
-  def get_schedule_params(times, cinema_id, movie_id) do
+  def get_schedule_params(times, cinema_id, movie_id, type \\ "2D") do
     Enum.map(times, fn {day, list} ->
       Enum.map(list, fn time ->
-        %{time: time, day: Utils.full_day(day), movie_id: movie_id, cinema_id: cinema_id, schedule_type: "2D"}
+        %{time: time, day: Utils.full_day(day), movie_id: movie_id, cinema_id: cinema_id, schedule_type: type}
       end)
     end)
     |> List.flatten
@@ -80,9 +82,92 @@ defmodule Moview.Scraper.Common do
     |> String.trim
   end
 
+  def expand_time_string("Daily: "<> time_string) do
+    @weekdays |> Enum.map(&(expand_time_string(&1, String.trim(time_string))))
+  end
+  def expand_time_string("Daily " <> str), do:  expand_time_string("Daily: #{String.trim(str)}")
+  def expand_time_string("Mon: " <> time_string), do: {"Mon", Utils.split_and_trim(time_string, ",")}
+  def expand_time_string("Tue: " <> time_string), do: {"Tue", Utils.split_and_trim(time_string, ",")}
+  def expand_time_string("Wed: " <> time_string), do: {"Wed", Utils.split_and_trim(time_string, ",")}
+  def expand_time_string("Thu: " <> time_string), do: {"Thu", Utils.split_and_trim(time_string, ",")}
+  def expand_time_string("Fri: " <> time_string), do: {"Fri", Utils.split_and_trim(time_string, ",")}
+  def expand_time_string("Sat: " <> time_string), do: {"Sat", Utils.split_and_trim(time_string, ",")}
+  def expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, ",")}
+  def expand_time_string(str) when is_binary(str) do
+    str =
+      case str do
+        <<range::binary-size(10)>> <> " " <> rest -> "#{range}: #{String.trim(rest)}"
+        _ -> str
+      end
+
+    [day_range, time_string] = Utils.split_and_trim(str, ":", [parts: 2])
+    [day_range, time_string] =
+      case day_range do
+        "Daily  12" -> ["Daily", "12:00pm " <> time_string]
+        _ -> [day_range, time_string]
+      end
+    time_string = String.downcase(time_string)
+
+    day_range
+    |> normalize_range(",")
+    |> Enum.map(fn dr -> Utils.split_and_trim(dr, "&") |> Enum.map(&expand_range/1) end)
+    |> List.flatten
+    |> Enum.map(&(expand_time_string(&1, time_string)))
+  end
+  def expand_time_string(day, time_string), do: expand_time_string("#{day}: #{time_string}")
+
+  defp normalize_range(range, delim) do
+    range
+    |> Utils.split_and_trim(delim)
+    |> Enum.map(fn arg ->
+      case String.contains?(arg, "-") do
+        true ->
+          arg
+          |> Utils.split_and_trim("-")
+          |> Enum.map(fn x ->
+            x
+            |> String.downcase
+            |> String.capitalize
+          end)
+          |> Enum.join("-")
+
+        false ->
+          arg
+          |> String.downcase
+          |> String.capitalize
+      end
+    end)
+  end
+
   def expand_range(stop, stop, acc), do: acc ++ [stop]
   def expand_range(start, stop, []), do: expand_range(Utils.day_after(start), stop, [start])
   def expand_range(day, stop, acc), do: expand_range(Utils.day_after(day), stop, acc ++ [day])
+
+  def expand_range("Daily  12"), do: expand_time_string("Daily: 12:00pm")
+  def expand_range(str) do
+    case String.match?(str, ~r/-/) do
+      false -> do_expand_range(str, "to")
+      true -> do_expand_range(str, "-")
+    end
+  end
+
+  defp do_expand_range(str, delim) do
+    case String.contains?(str, delim) do
+      false ->
+        case String.contains?(str, ",") do
+          false -> [str]
+          true -> Utils.split_and_trim(str, ",")
+        end
+      true ->
+        [start, stop] =
+          case Utils.split_and_trim(str, delim) do
+            [start, stop] -> [start, stop]
+            [start] -> [start, start]
+          end
+
+        expand_range(start, stop, [])
+    end
+  end
 
   def remove_multiple_white_spaces(str) when is_binary(str) do
     str
@@ -91,5 +176,5 @@ defmodule Moview.Scraper.Common do
     |> String.trim
   end
   def remove_multiple_white_spaces(stuff), do: stuff
-  
+
 end

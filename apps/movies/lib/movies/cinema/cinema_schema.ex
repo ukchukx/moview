@@ -26,13 +26,19 @@ defmodule Moview.Movies.Cinema.Schema do
   end
 
   def changeset(%Ecto.Changeset{} = struct, params) do
-    case fetch_field(struct, :data) do
-      {_, nil} ->
-        struct
-        |> put_embed(:data, __MODULE__.Data.changeset(params))
-      {_, data} ->
-        struct
-        |> put_embed(:data, __MODULE__.Data.changeset(data, params))
+    struct =
+      case fetch_field(struct, :data) do
+        {_, nil} ->
+          struct
+          |> put_embed(:data, __MODULE__.Data.changeset(params))
+        {_, data} ->
+          struct
+          |> put_embed(:data, __MODULE__.Data.changeset(data, params))
+      end
+
+    case Map.get(params, :id) do
+      nil -> struct
+      id -> put_change(struct, :id, id)
     end
   end
 

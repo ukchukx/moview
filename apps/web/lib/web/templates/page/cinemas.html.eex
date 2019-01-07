@@ -3,10 +3,11 @@
   <div class="col-sm-12 col-md-6 mb-3">
     <div class="card p-3">
       <div class="card-body">
-        <h4 class="card-title"><%= cinema.data.name %></h4>
+        <h4 class="card-title"><a href="<%= cinema.data.url %>"><%= cinema.data.name %></a></h4>
         <h6 class="card-subtitle mb-2 text-muted"><%= cinema.data.branch_title %></h6>
         <p class="card-text">Address: <%= cinema.data.address %>
         <br>City: <%= cinema.data.city %></p>
+        <p><%= cinema.id %></p>
       </div>
     </div>
   </div>

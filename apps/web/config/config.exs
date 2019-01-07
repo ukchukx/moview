@@ -10,6 +10,8 @@ config :web,
   namespace: Moview.Web,
   cache: :service_cache
 
+config :phoenix, :json_library, Jason
+
 config :web, port: System.get_env("MOVIEW_PORT") || 1976
 
 # Configures the endpoint
@@ -17,8 +19,7 @@ config :web, Moview.Web.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "5sGUx8LMnJyCv6ntcT9B0Cp5Kol0mmdiGaQVw3wjYaSsRa1oVinmWmS47kT69KWJ",
   render_errors: [view: Moview.Web.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Moview.Web.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: Moview.Web.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -27,4 +28,4 @@ config :logger, :console,
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

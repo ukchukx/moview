@@ -5,13 +5,18 @@ defmodule Moview.Web.Cache.Impl do
     GenServer.call(@service_name, {:get_schedules, movie_id})
   end
 
+  def refresh_schedules do
+    GenServer.cast(@service_name, :refresh)
+  end
+
 
   defmodule CacheServer do
     use GenServer
-    alias Moview.Movies.{Schedule, Cinema}
+    require Logger
+    alias Moview.Movies.{Schedule, Movie, Cinema}
 
     @service_name Application.get_env(:web, :cache)
-    @interval 600 # 10 minutes
+    @interval Application.get_env(:web, :schedule_interval)
 
     @days %{1 => "Monday",
       2 => "Tuesday",
@@ -32,7 +37,22 @@ defmodule Moview.Web.Cache.Impl do
 
     def handle_info(:init, %{table: table}) do
       :ets.new(table, [:named_table, :set, :public])
+      schedule_for_later()
       {:noreply, %{table: table}}
+    end
+
+    def handle_info(:compute_schedules, %{table: table} = state) do
+      Logger.debug "Computing schedules..."
+
+      refresh(table)
+      schedule_for_later()
+      {:noreply, state}
+    end
+
+    def handle_cast(:refresh, %{table: table} = state) do
+      Logger.debug "Refreshing schedules..."
+      refresh(table)
+      {:noreply, state}
     end
 
     def handle_call({:get_schedules, movie_id}, _, %{table: table} = state) do
@@ -40,27 +60,30 @@ defmodule Moview.Web.Cache.Impl do
         case :ets.lookup(table, movie_id) do
           [] ->
             # We found nothing; re-compute schedules
-            movie_id
-            |> compute_schedules
-            |> insert_schedules(movie_id, table)
-          [{_, {schedules, ts}}] ->
-            now_ts = :calendar.local_time |> to_ts
-            # If it's less than @interval since last computation, return last computation
-            case now_ts - ts <= @interval do
-              true -> schedules
-              false ->
-                # Our cache interval has elapsed. Re-compute
-                movie_id
-                |> compute_schedules
-                |> insert_schedules(movie_id, table)
-            end
+            compute_schedules_for_movie(movie_id, table)
+          [{_, schedules}] ->
+            schedules
         end
       {:reply, {:ok, schedules}, state}
     end
 
+    defp compute_schedules_for_movie(id, table) do
+      id
+      |> compute_schedules
+      |> insert_schedules(id, table)
+    end
+
+    defp refresh(table) do
+      {:ok, movies} = Movie.get_movies()
+      Enum.map(movies, fn %{id: id} -> compute_schedules_for_movie(id, table) end)
+    end
+
+    defp schedule_for_later do
+      Process.send_after(self(), :compute_schedules, @interval * 1000)
+    end
+
     defp insert_schedules(schedules, movie_id, table) do
-      now_ts = :calendar.local_time |> to_ts
-      :ets.insert(table, {movie_id, {schedules, now_ts}})
+      :ets.insert(table, {movie_id, schedules})
       schedules
     end
 
@@ -70,18 +93,14 @@ defmodule Moview.Web.Cache.Impl do
 
       now = :calendar.local_time()
       date_list = date_list(now, next_thursday())
-      now_ts = :calendar.local_time |> to_ts
+      now_ts = to_ts(now)
 
       schedules
       |> Enum.map(fn sched ->
-        cinema =
+        {cinema_name, cinema_url} =
           case Enum.find(cinemas, "", fn c -> c.id == sched.cinema_id end) do
-            "" -> ""
-            %{data: %{name: name, branch_title: branch, city: city}} ->
-              case branch do
-                "" -> "#{name}, #{city}"
-                _ -> "#{name} (#{branch}), #{city}"
-              end
+            "" -> {"", ""}
+            c -> {Cinema.cinema_name(c), c.data.url}
           end
 
         sched
@@ -89,7 +108,8 @@ defmodule Moview.Web.Cache.Impl do
         |> Map.delete(:__struct__)
         |> Map.put(:id, sched.id)
         |> Map.put(:cinema_id, sched.cinema_id)
-        |> Map.put(:cinema, cinema)
+        |> Map.put(:cinema, cinema_name)
+        |> Map.put(:cinema_url, cinema_url)
       end)
       |> Enum.filter(fn %{day: day} ->
         Enum.find(date_list, fn

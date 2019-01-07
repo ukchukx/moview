@@ -9,7 +9,7 @@ defmodule Moview.Scraper.Ozone.Impl do
     cinemas
     |> Enum.map(fn %{data: %{url: url, address: a, branch_title: b}, id: cinema_id} ->
       Logger.info "Beginning to scrape: (#{b}) @ #{a}"
-      Task.async(fn ->  
+      Task.async(fn ->
         scrape(url)
         |> Enum.map(&Common.create_or_return_movie/1)
         |> Enum.filter(fn
@@ -33,7 +33,7 @@ defmodule Moview.Scraper.Ozone.Impl do
         end)
       end)
     end)
-    |> Enum.each(&Task.await(&1, 120_000)) 
+    |> Enum.each(&Task.await(&1, 120_000))
   end
 
   defp scrape(url) do
@@ -64,7 +64,7 @@ defmodule Moview.Scraper.Ozone.Impl do
     times =
       movie_node
       |> movie_time_string
-      |> expand_time_string
+      |> Common.expand_time_string
       |> List.flatten
 
     %{title: title, times: times}
@@ -73,7 +73,7 @@ defmodule Moview.Scraper.Ozone.Impl do
   defp movie_title({_, _, [div_node | _]}) do
     {"div", [{"class", "clearfix"} | _], [{"b", _, [{_, _, [title | _]}]} | _]} = div_node
 
-    title 
+    title
     |> Common.remove_multiple_white_spaces
     |> Common.clean_title(@title_embellishments)
     |> String.trim
@@ -85,54 +85,17 @@ defmodule Moview.Scraper.Ozone.Impl do
     [{"div", [{"class", "post_text"}], [{"p", _, [_| nodes]}]}] = nodes
 
     {"span", _, [{"strong", _, [day_range]}]} = Enum.at nodes, 4
-    day_range = 
+    day_range =
       day_range
       |> String.trim
       |> String.replace("Thur", "Thu")
 
-    time_string = 
-      nodes 
-      |> Enum.at(5) 
+    time_string =
+      nodes
+      |> Enum.at(5)
       |> Common.remove_multiple_white_spaces
 
     "#{day_range} #{time_string}"
   end
 
-  defp expand_time_string("Mon: " <> time_string), do: {"Mon", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Tue: " <> time_string), do: {"Tue", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Wed: " <> time_string), do: {"Wed", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Thu: " <> time_string), do: {"Thu", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Fri: " <> time_string), do: {"Fri", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Sat: " <> time_string), do: {"Sat", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, ",")}
-  defp expand_time_string(str) when is_binary(str) do
-
-    Logger.debug "Expanding time string: #{str}"
-
-    [day_range, time_string] = Utils.split_and_trim(str, ":", [parts: 2])
-    time_string = String.downcase(time_string)
-
-    day_range
-    |> expand_range
-    |> Enum.map(&(expand_time_string(&1, time_string)))
-  end
-  defp expand_time_string(day, time_string), do: expand_time_string("#{day}: #{time_string}")
-
-  defp expand_range(str) do
-    case String.contains?(str, "to") do
-      false ->
-        case String.contains?(str, ",") do
-          false -> [str]
-          true -> Utils.split_and_trim(str, ",")
-        end
-      true ->
-        [start, stop] =
-          case Utils.split_and_trim(str, "to") do
-            [start, stop] -> [start, stop]
-            [start] -> [start, start]
-          end
-
-        Common.expand_range(start, stop, [])     
-    end
-  end
 end

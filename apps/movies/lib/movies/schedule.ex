@@ -15,8 +15,15 @@ defmodule Moview.Movies.Schedule do
     Impl.update_schedule(id, params)
   end
 
-  def delete_schedule(schedule) do
+  def delete_schedule(%{} = schedule) do
     Impl.delete_schedule(schedule)
+  end
+
+  def delete_schedule(schedule_id) do
+    case get_schedule(schedule_id) do
+      {:ok, schedule} -> Impl.delete_schedule(schedule)
+      err -> err
+    end
   end
 
   def get_schedule(id) do
