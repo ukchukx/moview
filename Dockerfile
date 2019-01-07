@@ -58,8 +58,8 @@ ENV LC_ALL en_US.UTF-8
 WORKDIR /tmp
 
 # See : https://github.com/phusion/baseimage-docker/issues/58
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
-    apt-get -qq update
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+RUN apt-get -qq update
 
 RUN apt-get install -y sudo wget git tzdata curl inotify-tools build-essential zip unzip && \
     echo "deb http://packages.erlang-solutions.com/ubuntu $(lsb_release -sc) contrib" >> /etc/apt/sources.list && \
