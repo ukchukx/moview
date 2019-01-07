@@ -8,7 +8,7 @@
       <div class="card-body p-3">
         <h4 class="card-title one-line"><%= movie.data.title %></h4>
         <p class="card-text text-muted"><%= synopsis(movie) %></p>
-        <a href="/cinemas" class="card-link">Details</a>
+        <a href="<%= movie_url(@conn, movie) %>" class="card-link">Details</a>
         <a href="javascript:;" class="card-link" data-toggle="modal" data-target="#modal-<%= movie.id %>">Schedule</a>
       </div>
       <div class="modal fade" id="modal-<%= movie.id %>" tabindex="-1" role="dialog" aria-labelledby="modal-<%= movie.id %>" aria-hidden="true">

@@ -97,10 +97,10 @@ defmodule Moview.Web.Cache.Impl do
 
       schedules
       |> Enum.map(fn sched ->
-        cinema =
+        {cinema_name, cinema_url} =
           case Enum.find(cinemas, "", fn c -> c.id == sched.cinema_id end) do
-            "" -> ""
-            c -> Cinema.cinema_name(c)
+            "" -> {"", ""}
+            c -> {Cinema.cinema_name(c), c.data.url}
           end
 
         sched
@@ -108,7 +108,8 @@ defmodule Moview.Web.Cache.Impl do
         |> Map.delete(:__struct__)
         |> Map.put(:id, sched.id)
         |> Map.put(:cinema_id, sched.cinema_id)
-        |> Map.put(:cinema, cinema)
+        |> Map.put(:cinema, cinema_name)
+        |> Map.put(:cinema_url, cinema_url)
       end)
       |> Enum.filter(fn %{day: day} ->
         Enum.find(date_list, fn
