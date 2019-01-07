@@ -15,6 +15,11 @@ defmodule Moview.Web.AdminController do
     render conn, "movies.html", movies: movies, cinemas: cinemas
   end
 
+  def refresh(conn, _) do
+    Cache.refresh_schedules()
+    redirect(conn, to: Routes.page_path(conn, :movies))
+  end
+
   def catch_all(conn, _) do
     redirect(conn, to: Routes.admin_path(conn, :movies))
   end

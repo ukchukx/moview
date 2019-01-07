@@ -20,6 +20,7 @@ defmodule Moview.Web.Router do
     get "/m/:slug", PageController, :movie
     get "/cinemas", PageController, :cinemas
     get "/a/movies", AdminController, :movies
+    get "/a/refresh", AdminController, :refresh
     post "/a/create-movie", AdminController, :create_movie
     post "/a/add-movie", AdminController, :add_movie
     post "/a/delete-movie/:movie_id", AdminController, :delete_movie
