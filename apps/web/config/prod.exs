@@ -35,13 +35,13 @@ config :logger,
                {LoggerFileBackend, :error}]
 
 config :logger, :info,
-  path: "../../logs/web/info.log",
+  path: "logs/web/info.log",
   format: "[$date] [$time] [$level] $metadata $levelpad$message\n",
   metadata: [:date, :application, :module, :function, :line],
   level: :warn
 
 config :logger, :error,
-  path: "../../logs/web/error.log",
+  path: "logs/web/error.log",
   format: "[$date] [$time] [$level] $metadata $levelpad$message\n",
   metadata: [:date, :application, :module, :function, :line],
   level: :error
