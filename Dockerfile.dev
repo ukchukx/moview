@@ -93,7 +93,7 @@ ENV MIX_HOST 1976
 ENV TZ Africa/Lagos
 
 WORKDIR /app
-COPY ./_build/prod/rel/moview/releases/1.2.0/moview.tar.gz .
+COPY ./_build/prod/rel/moview/releases/2.0.0/moview.tar.gz .
 RUN tar -zxvf moview.tar.gz && rm -f moview.tar.gz
 
 
