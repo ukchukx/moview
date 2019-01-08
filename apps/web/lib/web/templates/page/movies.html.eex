@@ -27,16 +27,7 @@
                   <ul class="list-group">
                     <%= for schedule <- movie.schedules do %>
                     <li class="list-group-item">
-                      <div class="schedule-item" data-sched-day="<%= schedule.day %>" data-sched-ts="<%= schedule.ts %>" data-sched-id="<%= schedule.id %>" >
-                        <h5 class="card-title"><a href="<%= schedule.cinema_url %>"><%= schedule.cinema %></a></h5>
-                        <h6 class="card-subtitle mb-2 text-muted"><%= schedule.day %></h6>
-                        <p class="card-text">
-                          <span><%= schedule.time %></span>
-                          <%= if schedule.schedule_type != "2D" do %>
-                          <span>(<%= schedule.schedule_type %>)</span>
-                          <% end %>
-                        </p>
-                      </div>
+                      <%= render(Moview.Web.PageView, "schedule.html", conn: @conn, schedule: schedule) %>
                     </li>
                     <% end %>
                   </ul>
