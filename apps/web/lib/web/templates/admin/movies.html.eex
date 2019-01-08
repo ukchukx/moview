@@ -21,7 +21,7 @@
                     <img width="100px" height="100px" class="img-responsive" src="<%= movie.data.poster %>">
                   </div>
                   <div class="col align-self-center">
-                    <p class="h5 one-line"><%= movie.data.title %></p>
+                    <p class="h5 one-line"><a href="<%= movie_url(@conn, movie) %>"><%= movie.data.title %></a></p>
                   </div>
                   <div class="col align-self-center">
                     <div class="btn-group">
