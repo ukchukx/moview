@@ -87,6 +87,9 @@
                                   <h6 class="card-subtitle mb-2 text-muted"><%= schedule.day %></h6>
                                   <p class="card-text">
                                     <span><%= schedule.time %></span>
+                                    <%= if schedule.schedule_type != "2D" do %>
+                                    <span>(<%= schedule.schedule_type %>)</span>
+                                    <% end %>
                                     <%= link "Delete", to: Routes.admin_path(@conn, :delete_schedule, schedule.id), method: :post, data: [confirm: "Are you sure?"], class: "btn btn-secondary btn-sm" %>
                                   </p>
                                 </div>
