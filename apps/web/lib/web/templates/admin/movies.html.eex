@@ -82,14 +82,7 @@
                               <%= link "- Clear schedules", to: Routes.admin_path(@conn, :clear_schedules, movie.id), method: :post, data: [confirm: "Are you sure?"], class: "btn btn-secondary btn-sm mb-3" %>
                               <%= for schedule <- movie.schedules do %>
                               <li class="list-group-item">
-                                <div class="schedule-item" data-sched-day="<%= schedule.day %>" data-sched-ts="<%= schedule.ts %>" data-sched-id="<%= schedule.id %>" >
-                                  <h5 class="card-title"><%= schedule.cinema %></h5>
-                                  <h6 class="card-subtitle mb-2 text-muted"><%= schedule.day %></h6>
-                                  <p class="card-text">
-                                    <span><%= schedule.time %></span>
-                                    <%= link "Delete", to: Routes.admin_path(@conn, :delete_schedule, schedule.id), method: :post, data: [confirm: "Are you sure?"], class: "btn btn-secondary btn-sm" %>
-                                  </p>
-                                </div>
+                                <%= render(Moview.Web.AdminView, "schedule.html", conn: @conn, schedule: schedule) %>
                               </li>
                               <% end %>
                             </ul>
