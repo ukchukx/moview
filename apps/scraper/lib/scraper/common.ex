@@ -83,7 +83,9 @@ defmodule Moview.Scraper.Common do
   end
 
   def expand_time_string("Daily: "<> time_string) do
-    @weekdays |> Enum.map(&(expand_time_string(&1, String.trim(time_string))))
+    time_string = time_string |> String.downcase |> String.trim
+
+    @weekdays |> Enum.map(&(expand_time_string(&1, time_string)))
   end
   def expand_time_string("Daily " <> str), do:  expand_time_string("Daily: #{String.trim(str)}")
   def expand_time_string("Mon: " <> time_string), do: {"Mon", Utils.split_and_trim(time_string, ",")}
@@ -94,58 +96,26 @@ defmodule Moview.Scraper.Common do
   def expand_time_string("Sat: " <> time_string), do: {"Sat", Utils.split_and_trim(time_string, ",")}
   def expand_time_string("Sun: " <> time_string), do: {"Sun", Utils.split_and_trim(time_string, ",")}
   def expand_time_string(str) when is_binary(str) do
-    [day_range, time_string] = Utils.split_and_trim(str, ":", [parts: 2])
     [day_range, time_string] =
-      case day_range do
-        "Daily  12" -> ["Daily", "12:00pm " <> time_string]
-        _ -> [day_range, time_string]
-      end
-    time_string = String.downcase(time_string)
+      str
+      |> String.downcase
+      |> String.replace("to", "-")
+      |> Utils.split_and_trim(":", [parts: 2])
 
     day_range
     |> normalize_range(",")
-    |> Enum.map(fn dr -> Utils.split_and_trim(dr, "&") |> Enum.map(&expand_range/1) end)
+    |> Enum.map(&expand_range/1)
     |> List.flatten
     |> Enum.map(&(expand_time_string(&1, time_string)))
   end
   def expand_time_string(day, time_string), do: expand_time_string("#{day}: #{time_string}")
-
-  defp normalize_range(range, delim) do
-    range
-    |> Utils.split_and_trim(delim)
-    |> Enum.map(fn arg ->
-      case String.contains?(arg, "-") do
-        true ->
-          arg
-          |> Utils.split_and_trim("-")
-          |> Enum.map(fn x ->
-            x
-            |> String.downcase
-            |> String.capitalize
-          end)
-          |> Enum.join("-")
-
-        false ->
-          arg
-          |> String.downcase
-          |> String.capitalize
-      end
-    end)
-  end
 
   def expand_range(stop, stop, acc), do: acc ++ [stop]
   def expand_range(start, stop, []), do: expand_range(Utils.day_after(start), stop, [start])
   def expand_range(day, stop, acc), do: expand_range(Utils.day_after(day), stop, acc ++ [day])
 
   def expand_range("Daily  12"), do: expand_time_string("Daily: 12:00pm")
-  def expand_range(str) do
-    case String.match?(str, ~r/-/) do
-      false -> do_expand_range(str, "to")
-      true -> do_expand_range(str, "-")
-    end
-  end
-
-  defp do_expand_range(str, delim) do
+  def expand_range(str, delim \\ "-") do
     case String.contains?(str, delim) do
       false ->
         case String.contains?(str, ",") do
@@ -171,4 +141,26 @@ defmodule Moview.Scraper.Common do
   end
   def remove_multiple_white_spaces(stuff), do: stuff
 
+  defp normalize_range(range, delim) do
+    range
+    |> Utils.split_and_trim(delim)
+    |> Enum.map(fn arg ->
+      case String.contains?(arg, "-") do
+        true ->
+          arg
+          |> Utils.split_and_trim("-")
+          |> Enum.map(fn x ->
+            x
+            |> String.downcase
+            |> String.capitalize
+          end)
+          |> Enum.join("-")
+
+        false ->
+          arg
+          |> String.downcase
+          |> String.capitalize
+      end
+    end)
+  end
 end
